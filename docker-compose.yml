@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  monitor:
+    build:
+      context: ./Monitor
+    # altri eventuali parametri
+
+  analyzer:
+    build:
+      context: ./Analyzer
+    # altri eventuali parametri
+
+  planner:
+    build:
+      context: ./Planner
+    # altri eventuali parametri
+
+  executor:
+    build:
+      context: ./Executor
+    # altri eventuali parametri
+
+  managed_resources:
+    build:
+      context: ./ManagedResources
+    # altri eventuali parametri
