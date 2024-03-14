@@ -1,16 +1,16 @@
-version: '3'
+version: '7.0.0'
 
 services:
 
+  #Message Broker
   mosquitto:
     image: eclipse-mosquitto:latest
-    container_name: mosquitto_container
+    container_name: mosquitto_container_test
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
     restart: always
     networks:
-      test_network:
-        - ipv4_address: 173.20.0.100
+      - test_network
     ports:
       - '1883:1883'
       - '9001-9001'
@@ -19,30 +19,56 @@ services:
     build:
       context: ./Monitor
       dockerfile: Dockerfile
-    container_name: seas_monitor
+    container_name: seas_monitor_test
     restart: always
     networks:
-      test_network:
-        - ipv4_address: 173.20.0.101
+      - test_network
     depends_on:
       - mosquitto
 
   analyzer:
     build:
       context: ./Analyzer
-    # altri eventuali parametri
+      dockerfile: Dockerfile
+    container_name: seas_analyzer_test
+    restart: always
+    networks:
+      - test_network
+    depends_on:
+      - mosquitto
 
   planner:
     build:
       context: ./Planner
-    # altri eventuali parametri
+      dockerfile: Dockerfile
+    container_name: seas_analyzer_test
+    restart: always
+    networks:
+      - test_network
+    depends_on:
+      - mosquitto
 
   executor:
     build:
       context: ./Executor
-    # altri eventuali parametri
+      dockerfile: Dockerfile
+    container_name: seas_executor_test
+    restart: always
+    networks:
+      - test_network
+    depends_on:
+      - mosquitto
 
   managed_resources:
     build:
       context: ./ManagedResources
-    # altri eventuali parametri
+      dockerfile: Dockerfile
+    container_name: seas_resources_test
+    restart: always
+    networks:
+      - test_network
+    depends_on:
+      - mosquitto
+
+networks:
+  test_network:
