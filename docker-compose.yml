@@ -1,4 +1,4 @@
-version: '7.0.0'
+version: '3.8'
 
 services:
 
@@ -9,11 +9,11 @@ services:
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
     restart: always
-    networks:
-      - test_network
+    #networks:
+      #- test_network
     ports:
       - '1883:1883'
-      - '9001-9001'
+      - '9001:9001'
 
   monitor:
     build:
@@ -21,8 +21,8 @@ services:
       dockerfile: Dockerfile
     container_name: seas_monitor_test
     restart: always
-    networks:
-      - test_network
+    #networks:
+      #- test_network
     depends_on:
       - mosquitto
 
@@ -32,8 +32,8 @@ services:
       dockerfile: Dockerfile
     container_name: seas_analyzer_test
     restart: always
-    networks:
-      - test_network
+    #networks:
+      #- test_network
     depends_on:
       - mosquitto
 
@@ -41,10 +41,10 @@ services:
     build:
       context: ./Planner
       dockerfile: Dockerfile
-    container_name: seas_analyzer_test
+    container_name: seas_planner_test
     restart: always
-    networks:
-      - test_network
+    #networks:
+      #- test_network
     depends_on:
       - mosquitto
 
@@ -54,8 +54,8 @@ services:
       dockerfile: Dockerfile
     container_name: seas_executor_test
     restart: always
-    networks:
-      - test_network
+    #networks:
+     # - test_network
     depends_on:
       - mosquitto
 
@@ -65,10 +65,10 @@ services:
       dockerfile: Dockerfile
     container_name: seas_resources_test
     restart: always
-    networks:
-      - test_network
+    #networks:
+      #- test_network
     depends_on:
       - mosquitto
 
-networks:
-  test_network:
+#networks:
+  #test_network:
