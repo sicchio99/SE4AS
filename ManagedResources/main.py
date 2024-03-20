@@ -13,7 +13,7 @@ def publish():
 
 
 if __name__ == '__main__':
-    mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, reconnect_on_failure=True)
     mqttc.connect("mosquitto", 1883)
     mqttc.loop_start()
     publish()
