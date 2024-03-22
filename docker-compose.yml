@@ -15,6 +15,17 @@ services:
       - '1883:1883'
       - '9001:9001'
 
+  #Database
+  redis:
+    image: redis:latest
+    container_name: redis-container
+    ports:
+      - "6379:6379"
+    #Comando per avviare il DB senza persistenza -> db vuoto ad ogni avvio
+    #command: [ "redis-server", "--appendonly", "no", "--save", "", "--dir", "/data" ]
+    volumes:
+      - redis_data:/data
+
   monitor:
     build:
       context: ./Monitor
@@ -25,6 +36,7 @@ services:
       #- test_network
     depends_on:
       - mosquitto
+      - redis
 
   analyzer:
     build:
@@ -69,6 +81,9 @@ services:
       #- test_network
     depends_on:
       - mosquitto
+
+volumes:
+  redis_data:
 
 #networks:
   #test_network:
