@@ -18,13 +18,31 @@ services:
   #Database
   redis:
     image: redis:latest
-    container_name: redis-container
+    container_name: redis_container
     ports:
       - "6379:6379"
     #Comando per avviare il DB senza persistenza -> db vuoto ad ogni avvio
     #command: [ "redis-server", "--appendonly", "no", "--save", "", "--dir", "/data" ]
     volumes:
       - redis_data:/data
+
+  #Grafana
+  grafana:
+    image: grafana/grafana
+    container_name: grafana_container
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    restart: always
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - redis
+
+
+  #MAPE-K components
 
   monitor:
     build:
@@ -84,6 +102,7 @@ services:
 
 volumes:
   redis_data:
+  grafana_data:
 
 #networks:
   #test_network:
