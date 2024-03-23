@@ -58,6 +58,7 @@ if __name__ == '__main__':
     # connessione al database
     database = redis.Redis(host='redis', port=6379, db=0)
 
+    # connessione al broker
     client_mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, reconnect_on_failure=True)
     client_mqtt.on_connect = on_connect
     client_mqtt.on_message = on_message
