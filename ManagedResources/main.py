@@ -26,11 +26,11 @@ if __name__ == '__main__':
 
     sections = []
 
-    section_a = Section(section_name="Section A", co=0, co2=0, fine_dust=0, humidity=0)
+    section_a = Section(section_name="Section_a", co=0, co2=0, fine_dust=0, humidity=0)
     sections.append(section_a)
-    section_b = Section(section_name="Section A", co=0, co2=0, fine_dust=0, humidity=0)
+    section_b = Section(section_name="Section_b", co=0, co2=0, fine_dust=0, humidity=0)
     sections.append(section_b)
-    section_c = Section(section_name="Section A", co=0, co2=0, fine_dust=0, humidity=0)
+    section_c = Section(section_name="Section_c", co=0, co2=0, fine_dust=0, humidity=0)
     sections.append(section_c)
     #Definizione sezioni
 

@@ -13,7 +13,7 @@ class Section:
     alarm_state = False
 
     def __init__(self, section_name: str, co: int, co2: int, fine_dust: int, humidity: int):
-        self.sectionName = section_name
+        self.section_name = section_name
         self.co = co
         self.co2 = co2
         self.fineDust = fine_dust
