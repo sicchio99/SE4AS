@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 import redis
-
+import time
+import json
 """
 def on_connect(client, userdata, flags, reason_code, properties):
     if reason_code.is_failure:
@@ -41,9 +42,20 @@ def on_connect(client, userdata, flags, reason_code, properties):
 
 def on_message(client, userdata, msg):
     payload = msg.payload.decode("utf-8")
-    print(str(msg.topic + " -> " + payload))
+    chiave = str(msg.topic) + "-grafana"
+    # print(str(msg.topic + " -> " + payload))
     # Scrittura nel database
-    database.set(str(msg.topic), payload)
+    database.set(chiave, payload)
+
+    # Inserisci il valore nella lista associata alla chiave
+    # database.rpush(chiave, payload)
+    # Aggiungi il timestamp al sorted set
+    # database.zadd('timestamps:' + chiave, {payload: time.time()})
+
+    elemento = {'value': payload, 'timestamp': time.time()}
+    database.lpush(str(msg.topic), json.dumps(elemento)) #lpush aggiunge in testa, rpush in coda
+
+    print(str(msg.topic + " -> " + payload))
 
 
 def on_subscribe(client, userdata, mid, reason_code_list, properties):
