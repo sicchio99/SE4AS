@@ -1,3 +1,4 @@
+"""
 import redis
 import json
 import paho.mqtt.client as mqtt
@@ -59,3 +60,100 @@ class Analyzer:
 if __name__ == "__main__":
     analyzer = Analyzer()
     analyzer.check_limits()
+"""
+
+import redis
+import json
+import time
+import paho.mqtt.client as mqtt
+
+
+def getSectionNames():
+    keys = database.keys('industry*')
+    section_names = set()
+    for key in keys:
+        decoded_key = key.decode('utf-8')
+        section = decoded_key.split('/')[1]  # Ottengo nome sezione da chiave
+        section_names.add(section)  # Aggiungo nome della sezione al set
+    return section_names
+
+
+def getParameterNames():
+    params = database.keys('industry*')
+    param_names = set()
+    for param in params:
+        decoded_param = param.decode('utf-8')
+        parameter = decoded_param.split('/')[2]  # Ottengo nome parametro
+        if not parameter.endswith('-grafana'):  # Aggiungo solo se non termina con '-grafana'
+            param_names.add(parameter)
+    return param_names
+
+
+def getParametersData(section_name, param_name):
+    key = f'industry/{section_name}/{param_name}'
+    # esempio per recuperare solo i primi 10 valori della lista -> DA CAMBIARE
+    # per polveri/umidità bisogna fare media dei valori, per altri basterebbe anche solo il primo (?), da discutere
+    data = database.lrange(key, 0, 9)
+    # Parsing dei valori del JSON e recupero dei valori 'value'
+    decoded_data = []
+    for item in data:
+        json_item = json.loads(item.decode('utf-8'))
+        value = json_item['value']
+        decoded_data.append(int(value))
+
+    return decoded_data
+
+
+def getParametersLimit():
+    # da sostituire con chiamata a DB che recupera
+    limits = {
+        "co": 100,
+        "co2": 500,
+        "fineDust": 50,
+        "humidity": 80
+    }
+
+    return limits
+
+
+def checkLimits(parameters_data):
+    # recupero dei valori massimi dal database (simulato), da capire se oltre max serve anche range e valore di pericolo
+    limits = getParametersLimit()
+    print(str(limits))
+    for section in parameters_data:
+        print("section: ", section)
+
+
+if __name__ == '__main__':
+    # connessione al database
+    database = redis.Redis(host='redis', port=6379, db=0)
+    # connessione al broker
+    client_mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, reconnect_on_failure=True)
+    client_mqtt.connect("mosquitto", 1883)
+
+    # recupero nomi sezioni
+    sections = getSectionNames()
+    # recupero dei nomi dei parametri
+    parameters = getParameterNames()
+
+    while True:
+        # Definizione array che conterrà i valori dei parametri
+        parameters_data = {}
+
+        # Recupero dei dati dal database
+        for section in sections:
+            section_values = {}
+            for parameter in parameters:
+                data = getParametersData(section, parameter)
+                section_values[parameter] = data
+            parameters_data[section] = section_values
+
+            print(section + ': ' + str(parameters_data[section]))
+
+        # check_results = checkParameters(parameters_data) scegliere se separare il check da pubblicazione su canale o no
+        # publish_data(check_results) se separiamo recuperiamo array dei risultati e lo publichiamo sul canale
+
+        # caso senza separazione
+        checkLimits(parameters_data)
+
+        time.sleep(5)
