@@ -105,13 +105,18 @@ def getParametersData(section_name, param_name):
 
 
 def getParametersLimit():
-    # da sostituire con chiamata a DB che recupera
-    limits = {
-        "co": 100,
-        "co2": 500,
-        "fineDust": 50,
-        "humidity": 80
-    }
+    # Recupero del valore JSON dalla chiave "Configuration.js"
+    config = database.get("Configuration.json")
+
+    # Inizializzazione del dizionario "limits"
+    limits = {}
+
+    if config:
+        # Caricamento del JSON e costruzione del dizionario "limits"
+        config_data = json.loads(config)
+        limits = {
+            key: config_data[key] for key in config_data
+        }
 
     return limits
 
@@ -119,7 +124,7 @@ def getParametersLimit():
 def checkLimits(parameters_data):
     # recupero dei valori massimi dal database (simulato), da capire se oltre max serve anche range e valore di pericolo
     limits = getParametersLimit()
-    print(str(limits))
+    print("LIMITI: " + str(limits))
     for section in parameters_data:
         print("section: ", section)
 
