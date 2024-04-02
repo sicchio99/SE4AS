@@ -85,6 +85,8 @@ services:
       #- test_network
     depends_on:
       - mosquitto
+      - redis
+      - analyzer
 
   executor:
     build:
