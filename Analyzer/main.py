@@ -45,35 +45,44 @@ def getParametersData(section_name, param_name):
 def getParametersLimit():
     # Recupero del valore JSON dalla chiave "Configuration.js"
     config = database.get("Configuration.json")
-    limits = json.loads(config)
-    print("Dati JSON ottenuti da Redis:", config)
-    print("Limiti ottenuti dal parsing dei dati JSON:", limits)
 
-    # Inizializzazione del dizionario "limits"
-    limits = {}
-
+    # Verifica se config non è None
     if config:
-        # Caricamento del JSON e costruzione del dizionario "limits"
-        config_data = json.loads(config)
-        limits = {
-            key: config_data[key] for key in config_data
-        }
+        # Parsing dei dati JSON e assegnazione a limits
+        limits = json.loads(config)
+        print("Dati JSON ottenuti da Redis:", config)
+        print("Limiti ottenuti dal parsing dei dati JSON:", limits)
 
-    return limits
+        # Stampa il tipo di dati per ciascun valore dei limiti
+        for key, value in limits.items():
+            print(f"Tipo di dati per il limite di {key}: {type(value)}")
+
+        return limits
+    else:
+        print("Nessun dato JSON ottenuto da Redis per i limiti.")
+        return None
+
 
 
 def checkLimits(parameters_data, limits):
     print("LIMITI:")
     for parameter, limit in limits.items():
         print(f"{parameter}: limite={limit}")
+        # Stampa il tipo di dati del limite
+        print(f"Tipo di dati per il limite di {parameter}: {type(limit)}")
 
     for section_name, section_values in parameters_data.items():
         print("\nVALORI ATTUALI per", section_name, ":")
         for parameter, data in section_values.items():
             print(f"{parameter}: {data}")
 
+            # Stampa il tipo di dati di ogni valore nell'array
+            print(f"Tipo di dati per i valori di {parameter}: {type(data[0])}")
+
+            parameter_lower = parameter.lower()
+
             # Recupera il limite corrispondente al parametro
-            limit = limits.get(parameter)
+            limit = limits.get(parameter_lower)
 
             # Se il limite non è definito, passa al prossimo parametro
             if limit is None:
@@ -82,16 +91,27 @@ def checkLimits(parameters_data, limits):
             # Trova il valore massimo all'interno della lista di dati
             max_value = max(data)
 
+            # Stampa il valore massimo e il limite corrispondente per il confronto
+            print(f"Valore massimo per {parameter}: {max_value}, Limite: {limit}")
+
             # Controlla se il valore massimo supera il limite, considerando il parametro specifico
-            if parameter in ['CO', 'CO2', 'Fine Dust'] and max_value > limits.get(parameter):
-                # Genera il messaggio di errore appropriato in base al parametro
-                error_message = f"Attivare ventilazione {parameter}, fuori limite massimo. Valore massimo attuale: {max_value}"
+            if max_value > limit:
+                if parameter.lower() in ['co', 'co2']:
+                    # Attiva la ventilazione e apre le finestre
+                    error_message = f"Attivare ventilazione {parameter}, fuori limite massimo. Valore massimo attuale: {max_value}"
+                    error_message1 = f"Aprire le finestre {parameter}, fuori limite massimo. Valore massimo attuale: {max_value}"
+                elif parameter.lower() == 'finedust':
+                    # Attiva l'umidificatore
+                    error_message = f"Attivare Umidificatore {parameter}, fuori limite massimo. Valore massimo attuale: {max_value}"
+
 
                 # Stampa il messaggio di errore su stderr
                 sys.stderr.write(f"Errore nella sezione {section_name}: {error_message}\n")
+                sys.stderr.write(f"Errore nella sezione {section_name}: {error_message1}\n")
 
-                # Stampa di debug
-                print(f"Errore nella sezione {section_name}: {error_message}")
+
+
+
 
 
 if __name__ == '__main__':
