@@ -68,30 +68,27 @@ def checkLimits(parameters_data, limits):
     print("LIMITI:")
     for parameter, limit in limits.items():
         print(f"{parameter}: limite={limit}")
-        # Stampa il tipo di dati del limite
-        print(f"Tipo di dati per il limite di {parameter}: {type(limit)}")
+
 
     for section_name, section_values in parameters_data.items():
         print("\nVALORI ATTUALI per", section_name, ":")
         for parameter, data in section_values.items():
             print(f"{parameter}: {data}")
 
-            # Stampa il tipo di dati di ogni valore nell'array
-            print(f"Tipo di dati per i valori di {parameter}: {type(data[0])}")
 
             parameter_lower = parameter.lower()
 
             # Recupera il limite corrispondente al parametro
             limit = limits.get(parameter_lower)
 
-            # Se il limite non è definito, passa al prossimo parametro
+
             if limit is None:
                 continue
 
-            # Trova il valore massimo all'interno della lista di dati
+
             max_value = max(data)
 
-            # Stampa il valore massimo e il limite corrispondente per il confronto
+
             print(f"Valore massimo per {parameter}: {max_value}, Limite: {limit}")
 
             # Controlla se il valore massimo supera il limite, considerando il parametro specifico
@@ -105,7 +102,7 @@ def checkLimits(parameters_data, limits):
                     error_message = f"Attivare Umidificatore {parameter}, fuori limite massimo. Valore massimo attuale: {max_value}"
 
 
-                # Stampa il messaggio di errore su stderr
+
                 sys.stderr.write(f"Errore nella sezione {section_name}: {error_message}\n")
                 sys.stderr.write(f"Errore nella sezione {section_name}: {error_message1}\n")
 
