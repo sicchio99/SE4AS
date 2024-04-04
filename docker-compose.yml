@@ -25,9 +25,6 @@ services:
     #command: [ "redis-server", "--appendonly", "no", "--save", "", "--dir", "/data" ]
     volumes:
       - redis_data:/data
-      - ./start_redis.sh:/usr/local/bin/start_redis.sh
-      - ./Configuration.json:/Configuration.json
-    command: /usr/local/bin/start_redis.sh
 
 
   #Grafana
@@ -107,6 +104,14 @@ services:
       #- test_network
     depends_on:
       - mosquitto
+
+  config_container:
+    build:
+      context: ./Configure
+      dockerfile: Dockerfile
+    container_name: seas_configure
+    depends_on:
+      - redis
 
 volumes:
   redis_data:
