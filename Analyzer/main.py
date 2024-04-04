@@ -154,7 +154,8 @@ if __name__ == '__main__':
         limits = getParametersLimit()
 
         # controllo dei limiti e pubblicazione dello stato
-        publishStatus(parameters_data, limits, client_mqtt)
+        #publishStatus(parameters_data, limits, client_mqtt)
+        checkLimits(parameters_data, limits)
 
         time.sleep(5)
 
