@@ -44,7 +44,7 @@ def getParametersData(section_name, param_name):
 
 def getParametersLimit():
     # Recupero del valore JSON dalla chiave "Configuration.js"
-    config = database.get("Configuration.json")
+    config = database.get("Config_data")
 
     # Verifica se config non è None
     if config:
@@ -106,8 +106,21 @@ def checkLimits(parameters_data, limits):
                 sys.stderr.write(f"Errore nella sezione {section_name}: {error_message}\n")
                 sys.stderr.write(f"Errore nella sezione {section_name}: {error_message1}\n")
 
-
-
+def publishStatus(parameters_data, limits, client: mqtt.Client):
+    for section_name, section_values in parameters_data.items():
+        for parameter, data in section_values.items():
+            parameter_lower = parameter.lower()
+            limit = limits.get(parameter_lower)
+            if limit is None:
+                continue
+            max_value = max(data)
+            if max_value > limit:
+                status = 1
+            else:
+                status = 0
+            topic = f"status/{section_name}/{parameter}"
+            client.publish(topic, status)
+            print(f"Published status {status} for {parameter} in section {section_name} on topic {topic}")
 
 
 
@@ -137,12 +150,12 @@ if __name__ == '__main__':
 
             print(section + ': ' + str(parameters_data[section]))
 
-        # check_results = checkParameters(parameters_data) scegliere se separare il check da pubblicazione su canale o no
-        # publish_data(check_results) se separiamo recuperiamo array dei risultati e lo publichiamo sul canale
+        # check dei limiti
         limits = getParametersLimit()
 
-        # caso senza separazione
-        checkLimits(parameters_data, limits)
+        # controllo dei limiti e pubblicazione dello stato
+        publishStatus(parameters_data, limits, client_mqtt)
 
         time.sleep(5)
+
 
