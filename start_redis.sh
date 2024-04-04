@@ -4,7 +4,7 @@
 redis-server --daemonize yes
 
 # Attendi che il server Redis sia pronto
-until redis-cli ping &>/dev/null; do
+until redis-cli ping >/dev/null 2>&1; do
     echo "Attendo il server Redis..."
     sleep 1
 done

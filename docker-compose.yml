@@ -27,9 +27,7 @@ services:
       - redis_data:/data
       - ./start_redis.sh:/usr/local/bin/start_redis.sh
       - ./Configuration.json:/Configuration.json
-    #command: [ "bash", "/usr/local/bin/start_redis.sh" ]
     command: /usr/local/bin/start_redis.sh
-    #command: ["sh", "/start_redis.sh"]
 
 
   #Grafana
