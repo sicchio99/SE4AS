@@ -65,17 +65,27 @@ def getParametersLimit():
 
 
 def checkLimits(parameters_data, limits):
-    print("LIMITI:")
-    for parameter, limit in limits.items():
-        print(f"{parameter}: limite={limit}")
+    #print("LIMITI:")
+    #for parameter, limit in limits.items():
+        #print(f"{parameter}: limite={limit}")
 
 
     for section_name, section_values in parameters_data.items():
-        print("\nVALORI ATTUALI per", section_name, ":")
+        #print("\nVALORI ATTUALI per", section_name, ":")
         for parameter, data in section_values.items():
             print(f"{parameter}: {data}")
+            massimo = max(data)
+            print("Massimo = ", massimo)
+            print("Limite = ", limits[parameter])
+            if(massimo > limits[parameter]):
+                print(f"{parameter} in {section_name} Maggiore del massimo")
+                client_mqtt.publish(f"status/{section_name}/{parameter}", 1)
+            else:
+                print(f"{parameter} in {section_name} OK")
+                client_mqtt.publish(f"status/{section_name}/{parameter}", 0)
 
 
+            """
             parameter_lower = parameter.lower()
 
             # Recupera il limite corrispondente al parametro
@@ -105,6 +115,7 @@ def checkLimits(parameters_data, limits):
 
                 sys.stderr.write(f"Errore nella sezione {section_name}: {error_message}\n")
                 sys.stderr.write(f"Errore nella sezione {section_name}: {error_message1}\n")
+            """
 
 def publishStatus(parameters_data, limits, client: mqtt.Client):
     for section_name, section_values in parameters_data.items():
