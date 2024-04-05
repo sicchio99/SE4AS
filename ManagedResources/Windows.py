@@ -32,14 +32,15 @@ class Windows:
 
         if execution[0] == 'ON':
             self.openWindows()
-        elif execution[1] == 'OFF':
+        elif execution[0] == 'OFF':
             self.closeWindows()
 
     def openWindows(self):
-        #self.room.light = self.room.light - 1
         self.section.co = self.section.co - 4
         self.section.co2 = self.section.co2 - 4
         print("Windows open")
+        self.client_mqtt.publish("Window", "Open")
 
     def closeWindows(self):
         print("Windows close")
+        self.client_mqtt.publish("Window", "Close")
