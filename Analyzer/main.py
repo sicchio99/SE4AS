@@ -12,7 +12,7 @@ def getSectionNames():
         decoded_key = key.decode('utf-8')
         section = decoded_key.split('/')[1]  # Ottengo nome sezione da chiave
         section_names.add(section)  # Aggiungo nome della sezione al set
-    return section_names
+    return sorted(section_names)
 
 
 def getParameterNames():
@@ -23,7 +23,7 @@ def getParameterNames():
         parameter = decoded_param.split('/')[2]  # Ottengo nome parametro
         if not parameter.endswith('-grafana'):  # Aggiungo solo se non termina con '-grafana'
             param_names.add(parameter)
-    return param_names
+    return sorted(param_names)
 
 
 def getParametersData(section_name, param_name):
@@ -62,6 +62,7 @@ def getParametersLimit():
 
 
 def checkLimits(parameters_data, limits):
+    parameter_status = {}
     # print("LIMITI:")
     # for parameter, limit in limits.items():
         # print(f"{parameter}: limite={limit}")
@@ -79,10 +80,22 @@ def checkLimits(parameters_data, limits):
 
             if average_value > limits[parameter]:
                 print(f"{parameter} in {section_name} - Greater than the maximum")
-                client_mqtt.publish(f"status/{section_name}/{parameter}", 1)
+                # client_mqtt.publish(f"status/{section_name}/{parameter}", 1)
+                parameter_status[parameter] = f'{parameter}-1'
             else:
                 print(f"{parameter} in {section_name} - OK")
-                client_mqtt.publish(f"status/{section_name}/{parameter}", 0)
+                # client_mqtt.publish(f"status/{section_name}/{parameter}", 0)
+                parameter_status[parameter] = f'{parameter}-0'
+
+        # conversione del dizionario in una stringa nel formato x/y/z/k in cui:
+        # x = co - stato
+        # y = co2 - stato
+        # z = fineDust - stato
+        # k = humidity - stato
+        parameter_status_value = parameter_status.values()
+        status_string = "/".join(parameter_status_value)
+
+        client_mqtt.publish(f"status/{section_name}", status_string)
 
 
 if __name__ == '__main__':
@@ -94,8 +107,10 @@ if __name__ == '__main__':
 
     # recupero nomi sezioni
     sections = getSectionNames()
+    print("SECTIONS!" + str(sections))
     # recupero dei nomi dei parametri
     parameters = getParameterNames()
+    print("PARAM!" + str(parameters))
 
     while True:
         # Definizione array che conterrà i valori dei parametri

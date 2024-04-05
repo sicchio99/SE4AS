@@ -9,8 +9,37 @@ def on_connect(client, userdata, flags, reason_code, properties):
 
 
 def on_message(client, userdata, msg):
+    executions = ""
     payload = msg.payload.decode("utf-8")
+    plan = payload.split("/")
+    print(str(plan))
     topic = msg.topic.split("/")
+    message_key = f"executions/" + topic[1]
+
+    # Controllo su co e co2
+    if plan[1] == "no_actions" and plan[2] == "no_actions":
+        executions += "OFF"
+        print(f"{topic[1]}: turn off ventilation system and close the windows")
+    elif plan[1] == "decrease" or plan[1] == "decrease":
+        executions += "ON"
+        print(f"{topic[1]}: turn on ventilation system and open the windows")
+
+    # Controllo su polveri sottili e umidità
+    if plan[3] == "no_actions" and plan[4] == "no_actions":
+        executions += "/OFF"
+        print(f"{topic[1]}: turn off humidification system")
+    elif plan[3] == "decrease" and plan[4] == "no_actions":
+        executions += "/HUMIDIFY"
+        print(f"{topic[1]}: Turn on the humidification system and humidify the air")
+    elif plan[3] == "no_actions" and plan[4] == "decrease":
+        executions += "/DEHUMIDIFY"
+        print(f"{topic[1]}: Turn on the humidification system and dehumidify the air")
+
+    # Pubblicazione sul canale. Messaggio con struttura: part1/part2
+    # part1 : comando agli attuatori relativi a co e co2
+    # part2 : comando agli attuatori relativi a fineDust e humidity
+
+    client_mqtt.publish(message_key, executions)
 
 
 def on_subscribe(client, userdata, mid, reason_code_list, properties):
