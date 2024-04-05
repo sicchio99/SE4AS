@@ -20,7 +20,7 @@ def on_message(client, userdata, msg):
     if plan[1] == "no_actions" and plan[2] == "no_actions":
         executions += "OFF"
         print(f"{topic[1]}: turn off ventilation system and close the windows")
-    elif plan[1] == "decrease" or plan[1] == "decrease":
+    elif plan[1] == "decrease" or plan[2] == "decrease":
         executions += "ON"
         print(f"{topic[1]}: turn on ventilation system and open the windows")
 

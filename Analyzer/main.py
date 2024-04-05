@@ -35,7 +35,8 @@ def getParametersData(section_name, param_name):
     for item in data:
         json_item = json.loads(item.decode('utf-8'))
         value = json_item['value']
-        decoded_data.append(int(value))
+        if value != '':
+            decoded_data.append(int(value))
 
     return decoded_data
 
