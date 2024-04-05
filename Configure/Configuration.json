@@ -1,7 +1,7 @@
 {
-  "co": 100,
-  "co2": 500,
-  "fineDust": 50,
-  "humidity": 80
+  "co": 40,
+  "co2": 1000,
+  "fineDust": 25,
+  "humidity": 60
 }
 

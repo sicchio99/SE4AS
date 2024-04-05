@@ -12,6 +12,7 @@ def on_message(client, userdata, msg):
     payload = msg.payload.decode("utf-8")
     topic = msg.topic.split("/")
     message_key = f"plans/"+topic[1]+"/"+topic[2]
+    """
     if payload == actions['esempio1']:
         client_mqtt.publish(message_key, 'increase')
         print(f"{topic[1]}-{topic[2]}: increase")
@@ -27,6 +28,13 @@ def on_message(client, userdata, msg):
     if payload == actions['esempio5']:
         client_mqtt.publish(message_key, 'no more danger')
         print(f"{topic[1]}-{topic[2]}: no more danger")
+    """
+    if payload == actions['no actions']:
+        client_mqtt.publish(message_key, 'no actions')
+        print(f"{topic[1]}-{topic[2]}: no actions")
+    if payload == actions['decrease']:
+        client_mqtt.publish(message_key, 'decrease')
+        print(f"{topic[1]}-{topic[2]}: decrease")
 
 
 def on_subscribe(client, userdata, mid, reason_code_list, properties):
@@ -38,13 +46,10 @@ def on_subscribe(client, userdata, mid, reason_code_list, properties):
 
 if __name__ == '__main__':
 
-    # Definire dizionario azione - valore
+    # Dizionario azione - valore
     actions = {
-        'esempio1': 1,
-        'esempio2': 2,
-        'esempio3': 3,
-        'esempio4': 4,
-        'esempio5': 5
+        'no actions': '0',
+        'decrease': '1'
     }
 
     client_mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, reconnect_on_failure=True)

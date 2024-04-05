@@ -93,6 +93,8 @@ services:
      # - test_network
     depends_on:
       - mosquitto
+      - redis
+      - planner
 
   managed_resources:
     build:
