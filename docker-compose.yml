@@ -38,7 +38,8 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     restart: always
     volumes:
-      - grafana_data:/var/lib/grafana
+      - .grafana_data:/var/lib/grafana
+      - ./grafana.ini:/etc/grafana/grafana.ini
     depends_on:
       - redis
 
