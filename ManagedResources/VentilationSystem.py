@@ -51,4 +51,4 @@ class VentilationSystem:
     def disableVentilation(self):
         print(f"Ventilation System OFF - {self.section.section_name}")
         self.client_mqtt.publish(f"VentilationSystem/{self.section.section_name}", "Not Active")
-        print("Not Active")
+

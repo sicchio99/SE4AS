@@ -3,6 +3,7 @@ import random
 from random import randint
 import Windows
 import VentilationSystem
+import HumidificationSystem
 
 
 class Section:
@@ -24,7 +25,7 @@ class Section:
         self.co2 = co2
         self.fineDust = fineDust
         self.humidity = humidity
-        self.actuators = [Windows.Windows(self), VentilationSystem.VentilationSystem(self)]
+        self.actuators = [Windows.Windows(self), VentilationSystem.VentilationSystem(self), HumidificationSystem.HumidificationSystem(self)]
 
     def simulate(self, client: Client):
         rand = random.randint(0, 9)
