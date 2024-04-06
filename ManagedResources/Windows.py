@@ -17,30 +17,34 @@ class Windows:
         self.client_mqtt.on_subscribe = self.on_subscribe
         self.client_mqtt.loop_forever()
 
-    def on_subscribe(client, userdata, mid, reason_code_list, properties):
+    def on_subscribe(self, client, userdata, mid, reason_code_list, properties):
         if reason_code_list[0].is_failure:
             print(f"Broker rejected you subscription: {reason_code_list[0]}")
         else:
             print(f"Broker granted the following QoS: {reason_code_list[0].value}")
 
-    def on_connect(self, client, userdata, flags, rc):
-        self.client_mqtt.subscribe(f"executions/{self.section.section_name}/#")
+    def on_connect(self, client, userdata, flags, rc, properties=None):
+        if rc == 0:
+            print("Connessione MQTT avvenuta con successo")
+            client.subscribe(f"executions/{self.section.section_name}/#")
+        else:
+            print(f"Failed to connect: {rc}. loop_forever() will retry connection")
 
     def on_message(self, client, userdata, msg):
         payload = msg.payload.decode("utf-8")
         execution = payload.split("/")
-
+        print("ON MESSAGE:" + str(execution))
         if execution[0] == 'ON':
             self.openWindows()
         elif execution[0] == 'OFF':
             self.closeWindows()
 
     def openWindows(self):
-        self.section.co = self.section.co - 4
-        self.section.co2 = self.section.co2 - 4
-        print("Windows open")
-        self.client_mqtt.publish("Window", "Open")
+        self.section.co -= 5
+        self.section.co2 -= 5
+        print(f"Windows open - {self.section.section_name}")
+        self.client_mqtt.publish(f"Window/{self.section.section_name}", "Open")
 
     def closeWindows(self):
-        print("Windows close")
-        self.client_mqtt.publish("Window", "Close")
+        print(f"Windows close - {self.section.section_name}")
+        self.client_mqtt.publish(f"Window/{self.section.section_name}", "Close")

@@ -1,6 +1,7 @@
 from paho.mqtt.client import Client
 import random
 from random import randint
+import Windows
 
 
 class Section:
@@ -22,7 +23,7 @@ class Section:
         self.co2 = co2
         self.fineDust = fineDust
         self.humidity = humidity
-        self.actuators = []
+        self.actuators = [Windows.Windows(self)]
 
     def simulate(self, client: Client):
         rand = random.randint(0, 9)
