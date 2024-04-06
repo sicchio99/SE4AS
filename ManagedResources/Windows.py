@@ -41,7 +41,11 @@ class Windows:
 
     def openWindows(self):
         self.section.co -= 5
+        if self.section.co < 0:
+            self.section.co = 0
         self.section.co2 -= 5
+        if self.section.co2 < 0:
+            self.section.co2 = 0
         print(f"Windows open - {self.section.section_name}")
         self.client_mqtt.publish(f"Window/{self.section.section_name}", "Open")
 
