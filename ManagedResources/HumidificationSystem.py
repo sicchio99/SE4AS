@@ -38,7 +38,7 @@ class HumidificationSystem:
             self.increaseHumidity()
         elif execution[1] == 'OFF':
             self.constantHumidity()
-        elif execution[1] == 'DEUMIDIFY':
+        elif execution[1] == 'DEHUMIDIFY':
             self.decreaseHumidity()
 
     def increaseHumidity(self):
