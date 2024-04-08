@@ -62,6 +62,21 @@ def getParametersLimit():
     return limits
 
 
+def getSectionAlarm(section_name):
+    key = f'alarmState/{section_name}'
+    danger = database.lindex(key, 0)
+    if danger:
+        # Decodifica la stringa JSON in un dizionario Python
+        danger_dict = json.loads(danger.decode('utf-8'))
+
+        # Estrai il valore dalla chiave "value" nel dizionario
+        danger_value = danger_dict.get('value')
+
+        return danger_value
+    else:
+        return None
+
+
 def checkLimits(parameters_data, limits):
     parameter_status = {}
     # print("LIMITI:")
@@ -78,15 +93,20 @@ def checkLimits(parameters_data, limits):
 
             # 0 -> Paramter lower than the limit
             # 1 -> Parameter higher than the limit
+            # 2 -> Parameter higher than the danger value
+            # 3 -> Parameter lower than the no-more-danger value
 
-            if average_value > limits[parameter]:
-                print(f"{parameter} in {section_name} - Greater than the maximum")
-                # client_mqtt.publish(f"status/{section_name}/{parameter}", 1)
-                parameter_status[parameter] = f'{parameter}-1'
+            if dangers_data[section_name] == 'False':
+                if average_value > limits[parameter]:
+                    print(f"{parameter} in {section_name} - Greater than the maximum")
+                    # client_mqtt.publish(f"status/{section_name}/{parameter}", 1)
+                    parameter_status[parameter] = f'{parameter}-1'
+                else:
+                    print(f"{parameter} in {section_name} - OK")
+                    # client_mqtt.publish(f"status/{section_name}/{parameter}", 0)
+                    parameter_status[parameter] = f'{parameter}-0'
             else:
-                print(f"{parameter} in {section_name} - OK")
-                # client_mqtt.publish(f"status/{section_name}/{parameter}", 0)
-                parameter_status[parameter] = f'{parameter}-0'
+                print("danger")
 
         # conversione del dizionario in una stringa nel formato x/y/z/k in cui:
         # x = co - stato
@@ -116,9 +136,11 @@ if __name__ == '__main__':
     while True:
         # Definizione array che conterrà i valori dei parametri
         parameters_data = {}
+        dangers_data = {}
 
         # Recupero dei dati dal database
         for section in sections:
+            dangers_data[section] = getSectionAlarm(section)
             section_values = {}
             for parameter in parameters:
                 data = getParametersData(section, parameter)
@@ -126,6 +148,7 @@ if __name__ == '__main__':
             parameters_data[section] = section_values
 
             # print(section + ': ' + str(parameters_data[section]))
+            # print(section + " danger status = " + str(dangers_data[section]))
 
         # check dei limiti
         limits = getParametersLimit()
