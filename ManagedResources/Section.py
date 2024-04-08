@@ -4,6 +4,7 @@ from random import randint
 import Windows
 import VentilationSystem
 import HumidificationSystem
+import Alarm
 
 
 class Section:
@@ -27,7 +28,8 @@ class Section:
         self.alarmState = False
         self.actuators = [Windows.Windows(self),
                           VentilationSystem.VentilationSystem(self),
-                          HumidificationSystem.HumidificationSystem(self)]
+                          HumidificationSystem.HumidificationSystem(self),
+                          Alarm.Alarm(self)]
 
     def simulate(self, client: Client):
         rand = random.randint(0, 9)

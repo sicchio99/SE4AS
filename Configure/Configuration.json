@@ -1,7 +1,21 @@
 {
-  "co": 40,
-  "co2": 1000,
-  "fineDust": 25,
-  "humidity": 60
+  "limits": {
+    "co": 40,
+    "co2": 1000,
+    "fineDust": 25,
+    "humidity": 50
+  },
+  "danger": {
+    "co": 100,
+    "co2": 5000,
+    "fineDust": 50,
+    "humidity": 60
+  },
+  "safeValue": {
+    "co": 10,
+    "co2": 800,
+    "fineDust": 10,
+    "humidity": 35
+  }
 }
 

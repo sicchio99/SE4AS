@@ -34,18 +34,25 @@ class VentilationSystem:
         execution = payload.split("/")
         print("ON MESSAGE:" + str(execution))
         if execution[0] == 'ON':
-            self.activeVentilation()
+            self.activeVentilation(1)
+        elif execution[0] == 'DANGER':
+            self.activeVentilation(3)
         elif execution[0] == 'OFF':
             self.disableVentilation()
+        else:
+            print("Communication error!")
 
-    def activeVentilation(self):
-        self.section.co -= 1
+    def activeVentilation(self, power):
+        self.section.co -= power
         if self.section.co < 0:
             self.section.co = 0
-        self.section.co2 -= 1
+        self.section.co2 -= power
         if self.section.co2 < 0:
             self.section.co2 = 0
-        print(f"Ventilation System ON - {self.section.section_name}")
+        if power == 1:
+            print(f"Ventilation System ON at medium power - {self.section.section_name}")
+        else:
+            print(f"Ventilation System ON at maximum power - {self.section.section_name}")
         self.client_mqtt.publish(f"VentilationSystem/{self.section.section_name}", "Active")
 
     def disableVentilation(self):

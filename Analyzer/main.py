@@ -51,15 +51,26 @@ def getParametersLimit():
             time.sleep(1)
 
     # Parsing dei dati JSON e assegnazione a limits
-    limits = json.loads(config)
-    print("JSON data from Database:", config)
-    print("Limitations obtained from parsing JSON data:", limits)
+    # limits = json.loads(config)
+    # print("JSON data from Database:", config)
+    # print("Limitations obtained from parsing JSON data:", limits)
 
     # Stampa il tipo di dati per ciascun valore dei limiti
     # for key, value in limits.items():
         # print(f"Tipo di dati per il limite di {key}: {type(value)}")
 
-    return limits
+    # return limits
+
+    json_data = json.loads(config)
+    limits = json_data.get("limits", {})  # Estrae oggetto "limits" dal JSON (default: dizionario vuoto se non trovato)
+    dangers = json_data.get("danger", {})
+    safe_values = json_data.get("safeValue", {})
+
+    print("Limiti JSON:", limits)
+    print("Dangers JSON:", dangers)
+    print("Safes JSON:", safe_values)
+
+    return limits, dangers, safe_values
 
 
 def getSectionAlarm(section_name):
@@ -77,7 +88,7 @@ def getSectionAlarm(section_name):
         return None
 
 
-def checkLimits(parameters_data, limits):
+def checkLimits(parameters_data, limits, dangers, safe_values):
     parameter_status = {}
     # print("LIMITI:")
     # for parameter, limit in limits.items():
@@ -90,6 +101,8 @@ def checkLimits(parameters_data, limits):
             average_value = mean(data)
             print("Mean = ", average_value)
             print("Limit = ", limits[parameter])
+            print("Danger = ", dangers[parameter])
+            print("Safe = ", safe_values[parameter])
 
             # 0 -> Paramter lower than the limit
             # 1 -> Parameter higher than the limit
@@ -97,16 +110,24 @@ def checkLimits(parameters_data, limits):
             # 3 -> Parameter lower than the no-more-danger value
 
             if dangers_data[section_name] == 'False':
-                if average_value > limits[parameter]:
+                if average_value > limits[parameter] and average_value < dangers[parameter]:
                     print(f"{parameter} in {section_name} - Greater than the maximum")
                     # client_mqtt.publish(f"status/{section_name}/{parameter}", 1)
                     parameter_status[parameter] = f'{parameter}-1'
+                elif average_value > limits[parameter] and average_value > dangers[parameter]:
+                    print(f"{parameter} in {section_name} - Greater than the danger limit! DANGER")
+                    parameter_status[parameter] = f'{parameter}-2'
                 else:
                     print(f"{parameter} in {section_name} - OK")
                     # client_mqtt.publish(f"status/{section_name}/{parameter}", 0)
                     parameter_status[parameter] = f'{parameter}-0'
             else:
-                print("danger")
+                if average_value <= safe_values[parameter]:
+                    print(f"{parameter} in {section_name} - No more danger")
+                    parameter_status[parameter] = f'{parameter}-0'
+                else:
+                    print(f"{parameter} in {section_name} - Greater than the danger limit! DANGER")
+                    parameter_status[parameter] = f'{parameter}-2'
 
         # conversione del dizionario in una stringa nel formato x/y/z/k in cui:
         # x = co - stato
@@ -151,9 +172,9 @@ if __name__ == '__main__':
             # print(section + " danger status = " + str(dangers_data[section]))
 
         # check dei limiti
-        limits = getParametersLimit()
+        limits, dangers, safe_values = getParametersLimit()
 
         # controllo dei limiti e pubblicazione dello stato
-        checkLimits(parameters_data, limits)
+        checkLimits(parameters_data, limits, dangers, safe_values)
 
         time.sleep(5)

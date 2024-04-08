@@ -22,8 +22,11 @@ def on_message(client, userdata, msg):
         if decoposed_state[1] == '0':
             plan += "/no_actions"
             print(f"{topic[1]} - {decoposed_state[0]}: no_actions")
+        elif decoposed_state[1] == '2':
+            plan += "/danger"
+            print(f"{topic[1]} - {decoposed_state[0]}: danger")
         else:
-            plan += "/decrease"
+            plan += f"/decrease"
             print(f"{topic[1]} - {decoposed_state[0]}: decrease")
 
     # plan = stringa da pubblicare sul canale della sezione. Formato: /string1/string2/string3/string4
