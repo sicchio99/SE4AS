@@ -40,10 +40,10 @@ class Windows:
             self.closeWindows()
 
     def openWindows(self):
-        self.section.co -= 5
+        self.section.co -= 1
         if self.section.co < 0:
             self.section.co = 0
-        self.section.co2 -= 5
+        self.section.co2 -= 1
         if self.section.co2 < 0:
             self.section.co2 = 0
         print(f"Windows open - {self.section.section_name}")

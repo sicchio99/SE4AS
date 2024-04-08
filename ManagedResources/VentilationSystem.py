@@ -39,10 +39,10 @@ class VentilationSystem:
             self.disableVentilation()
 
     def activeVentilation(self):
-        self.section.co -= 5
+        self.section.co -= 1
         if self.section.co < 0:
             self.section.co = 0
-        self.section.co2 -= 5
+        self.section.co2 -= 1
         if self.section.co2 < 0:
             self.section.co2 = 0
         print(f"Ventilation System ON - {self.section.section_name}")

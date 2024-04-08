@@ -43,18 +43,21 @@ class HumidificationSystem:
 
     def increaseHumidity(self):
         self.section.humidity = self.section.humidity + 1
+        self.section.fineDust = self.section.fineDust - 1
+        if self.section.fineDust < 0:
+            self.section.fineDust = 0
         print(f"Humidification System UP - {self.section.section_name}")
         self.client_mqtt.publish(f"HumidificationSystem/{self.section.section_name}", "UP")
 
-
     def decreaseHumidity(self):
         self.section.humidity = self.section.humidity - 1
+        self.section.fineDust = self.section.fineDust + 1
+        if self.section.humidity < 0:
+            self.section.humidity = 0
         print(f"Humidification System DOWN - {self.section.section_name}")
         self.client_mqtt.publish(f"HumidificationSystem/{self.section.section_name}", "DOWN")
 
-
     def constantHumidity (self):
-        self.section.humidity = self.section.humidity
         print(f"Humidification System OFF - {self.section.section_name}")
         self.client_mqtt.publish(f"HumidificationSystem/{self.section.section_name}", "OFF")
 
