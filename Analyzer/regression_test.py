@@ -4,7 +4,7 @@ import time
 import paho.mqtt.client as mqtt
 import numpy as np
 from numpy import mean
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegressiona
 
 
 def getSectionNames():
@@ -173,6 +173,20 @@ def checkLimits(parameters_data, limits, dangers, safe_values, dangers_data):
 
         client_mqtt.publish(f"status/{section_name}", status_string)
 
+def checkAlarmActive(dangers_data):
+    """
+    Verifica se almeno una delle sezioni ha l'allarme attivo.
+
+    Argomenti:
+    dangers_data (dict): Dati sugli allarmi per ogni sezione.
+
+    Ritorna:
+    bool: True se almeno una delle sezioni ha l'allarme attivo, altrimenti False.
+    """
+    for section_name, alarm_state in dangers_data.items():
+        if alarm_state != 'False':
+            return True
+    return False
 
 if __name__ == '__main__':
     # connessione al database
@@ -187,6 +201,8 @@ if __name__ == '__main__':
     # recupero dei nomi dei parametri
     parameters = getParameterNames()
     print("PARAM!" + str(parameters))
+
+    alarm_active = False #impostiamo che all'inizio gli allarmi sono tutti spenti
 
     while True:
         # Definizione array che conterrà i valori dei parametri
@@ -204,10 +220,15 @@ if __name__ == '__main__':
 
         print("ALLARMI:" + str(dangers_data))
 
+        alarm_active = checkAlarmActive(dangers_data) #controllo se una delle 3 sezioni ha l'allarme attivato
+
         # check dei limiti
         limits, dangers, safe_values = getParametersLimit()
 
         # controllo dei limiti e pubblicazione dello stato
         checkLimits(parameters_data, limits, dangers, safe_values, dangers_data)
 
-        time.sleep(4)
+        if alarm_active:
+            time.sleep(2) # controllo ogni 2 secondi se l'allarme è attivo in 1 delle 3 sezioni
+        else:
+            time.sleep(4) #controllo ogni 4 secondi se l'allarme non è attivo
