@@ -20,7 +20,7 @@ def on_message(client, userdata, msg):
     if plan[1] == "no_actions" and plan[2] == "no_actions":
         executions += "OFF"
         print(f"{topic[1]}: deactive ventilation system and close the windows")
-    elif plan[2] == "danger" or plan[2] == "danger":
+    elif plan[1] == "danger" or plan[2] == "danger":
         executions += "DANGER"
         print(f"{topic[1]}: open the windows, active the ventilation at the maximum power and active the alarm!")
     #elif plan[1] == "decrease" or plan[2] == "decrease":
@@ -28,26 +28,24 @@ def on_message(client, userdata, msg):
         executions += "ON"
         print(f"{topic[1]}: active ventilation system and open partially the windows")
 
-
     # Controllo su polveri sottili e umidità
     if plan[3] == "no_actions" and plan[4] == "no_actions":
         executions += "/OFF"
         print(f"{topic[1]}: turn off humidification system")
-    elif plan[3] == "decrease" and plan[4] == "no_actions":
+    elif (plan[3] == "decrease" and plan[4] == "no_actions") or (plan[3] == "decrease" and plan[4] == "decrease"):
         executions += "/HUMIDIFY"
         print(f"{topic[1]}: Turn on the humidification system and humidify the air")
     elif plan[3] == "no_actions" and plan[4] == "decrease":
         executions += "/DEHUMIDIFY"
         print(f"{topic[1]}: Turn on the humidification system and dehumidify the air")
-    elif plan[3] == "danger" and plan[4] != "danger":
-        executions += "/DANGER-D"
-        print(f"{topic[1]}: Dehumidify the air at the maximum power and active the alarm!")
-    elif plan[3] != "danger" and plan[4] == "danger":
+    elif (plan[3] == "danger" and plan[4] != "danger") or (plan[3] == "danger" and plan[4] == "danger"):
         executions += "/DANGER-H"
         print(f"{topic[1]}: Humidify the air at the maximum power and active the alarm!")
+    elif plan[3] != "danger" and plan[4] == "danger":
+        executions += "/DANGER-D"
+        print(f"{topic[1]}: Dehumidify the air at the maximum power and active the alarm!")
     else:
         print("ERROR!")
-
 
     # Pubblicazione sul canale. Messaggio con struttura: part1/part2
     # part1 : comando agli attuatori relativi a co e co2

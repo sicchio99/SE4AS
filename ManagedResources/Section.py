@@ -35,13 +35,13 @@ class Section:
         rand = random.randint(0, 9)
         if rand == 0:
 
-            self.co += random.randint(-1, 3)
+            self.co += random.randint(-1, 10)
             if self.co < 0:
                 self.co = 0
-            self.co2 += random.randint(-1, 3)
+            self.co2 += random.randint(-1, 100)
             if self.co2 < 0:
                 self.co2 = 0
-            self.fineDust += random.randint(-1, 2)
+            self.fineDust += random.randint(-1, 5)
             if self.fineDust < 0:
                 self.fineDust = 0
             self.humidity += random.randint(-1, 1)

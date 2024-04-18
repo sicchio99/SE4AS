@@ -34,22 +34,22 @@ class VentilationSystem:
         execution = payload.split("/")
         print("ON MESSAGE:" + str(execution))
         if execution[0] == 'ON':
-            self.activeVentilation(1)
+            self.activeVentilation(4)
         elif execution[0] == 'DANGER':
-            self.activeVentilation(3)
+            self.activeVentilation(10)
         elif execution[0] == 'OFF':
             self.disableVentilation()
         else:
             print("Communication error!")
 
     def activeVentilation(self, power):
-        self.section.co -= power
+        self.section.co -= power//2
         if self.section.co < 0:
             self.section.co = 0
         self.section.co2 -= power
         if self.section.co2 < 0:
             self.section.co2 = 0
-        if power == 1:
+        if power == 4:
             print(f"Ventilation System ON at medium power - {self.section.section_name}")
         else:
             print(f"Ventilation System ON at maximum power - {self.section.section_name}")

@@ -14,7 +14,7 @@ class Alarm:
         self.client_mqtt.connect("mosquitto", 1883)
         self.client_mqtt.on_connect = self.on_connect
         self.client_mqtt.on_message = self.on_message
-        self.client_mqtt.on_subscribe = self.on_subscrive
+        self.client_mqtt.on_subscribe = self.on_subscribe
         self.client_mqtt.loop_forever()
 
     def on_subscribe(self, client, userdata, mid, reason_code_list, properties):
@@ -41,11 +41,11 @@ class Alarm:
             self.disableAlarm()
 
     def activeAlarm(self):
-        self.section.alarm_state = True
+        self.section.alarmState = True
         self.client_mqtt.publish(f"Alarm/{self.section.section_name}", "ACTIVE")
         print('ALARM ACTIVATED')
 
     def disableAlarm(self):
-        self.section.alarm_state = False
+        self.section.alarmState = False
         self.client_mqtt.publish(f"Alarm/{self.section.section_name}", "NOT ACTIVE")
         print('ALARM DEACTIVATED')

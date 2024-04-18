@@ -35,13 +35,13 @@ class HumidificationSystem:
         execution = payload.split("/")
         print("ON MESSAGE:" + str(execution))
         if execution[1] == 'HUMIDIFY':
-            self.increaseHumidity(1)
+            self.increaseHumidity(2)
         elif execution[1] == 'DANGER-H':
-            self.increaseHumidity(4)
+            self.increaseHumidity(6)
         elif execution[1] == 'DEHUMIDIFY':
-            self.decreaseHumidity(1)
+            self.decreaseHumidity(2)
         elif execution[1] == 'DANGER-D':
-            self.decreaseHumidity(4)
+            self.decreaseHumidity(6)
         elif execution[1] == 'OFF':
             self.constantHumidity()
         else:
@@ -52,7 +52,7 @@ class HumidificationSystem:
         self.section.fineDust = self.section.fineDust - power
         if self.section.fineDust < 0:
             self.section.fineDust = 0
-        if power == 1:
+        if power == 2:
             print(f"Humidification System HUMIDIFY at medium power - {self.section.section_name}")
         else:
             print(f"Humidification System HUMIDIFY at maximum power - {self.section.section_name}")
@@ -60,10 +60,10 @@ class HumidificationSystem:
 
     def decreaseHumidity(self, power):
         self.section.humidity = self.section.humidity - power
-        self.section.fineDust = self.section.fineDust + power//2
+        # self.section.fineDust = self.section.fineDust + power//2
         if self.section.humidity < 0:
             self.section.humidity = 0
-        if power == 1:
+        if power == 2:
             print(f"Humidification System DEHUMIDIFY at medium power - {self.section.section_name}")
         else:
             print(f"Humidification System DEHUMIDIFY at maximum power - {self.section.section_name}")

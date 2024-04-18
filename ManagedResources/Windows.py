@@ -35,22 +35,22 @@ class Windows:
         execution = payload.split("/")
         print("ON MESSAGE:" + str(execution))
         if execution[0] == 'ON':
-            self.openWindows(1)
+            self.openWindows(4)
         elif execution[0] == 'DANGER':
-            self.openWindows(3)
+            self.openWindows(8)
         elif execution[0] == 'OFF':
             self.closeWindows()
         else:
             print("Communication error!")
 
     def openWindows(self, power):
-        self.section.co -= power
+        self.section.co -= power//2
         if self.section.co < 0:
             self.section.co = 0
         self.section.co2 -= power
         if self.section.co2 < 0:
             self.section.co2 = 0
-        if power == 1:
+        if power == 4:
             print(f"Windows partially open - {self.section.section_name}")
         else:
             print(f"Windows open - {self.section.section_name}")
