@@ -27,8 +27,6 @@ def on_message(client, userdata, msg):
             print(f"{topic[1]} - {decoposed_state[0]}: danger")
         elif decoposed_state[1] == '3':
             print(f"{topic[1]} - {decoposed_state[0]}: increase")
-        elif decoposed_state[1] == '4':
-            print(f"{topic[1]} - {decoposed_state[0]}: danger")
         else:
             plan += f"/decrease"
             print(f"{topic[1]} - {decoposed_state[0]}: decrease")
