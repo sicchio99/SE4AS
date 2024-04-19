@@ -137,18 +137,34 @@ def getLowerHumidityLimits():
 
     json_data = json.loads(config)
     limits = json_data.get("limits", {})
-    dangers = json_data.get("danger", {})
 
     lower_humidity_limit = limits.get("lower humidity")
-    lower_humidity_danger = dangers.get("lower humidity")
 
-    return lower_humidity_limit, lower_humidity_danger
+    return lower_humidity_limit
+def getHumidityLimits():
+
+    config = None
+    while config is None:
+        config = database.get("Config_data")
+        if config is None:
+            print("Data not found. New attempt in 1 second...")
+            time.sleep(1)
+
+    json_data = json.loads(config)
+    limits = json_data.get("limits", {})
+    dangers = json_data.get("danger", {})
+
+    humidity_limit = limits.get("humidity")
+    humidity_limit_danger = dangers.get ("humidity")
+
+    return humidity_limit, humidity_limit_danger
 
 
 def checkLimits(parameters_data, limits, dangers, safe_values, dangers_data):
     parameter_status = {}
 
-    lower_humidity_limit, lower_humidity_danger = getLowerHumidityLimits()
+    lower_humidity_limit = getLowerHumidityLimits()
+    humidity_limit, humidity_limit_danger = getHumidityLimits()
 
     for section_name, section_values in parameters_data.items():
         # print("\nVALORI ATTUALI per", section_name, ":")
@@ -167,24 +183,26 @@ def checkLimits(parameters_data, limits, dangers, safe_values, dangers_data):
             # 3 -> Parameter lower than the minimum
             # 4 -> Parameter lower than the danger value
 
-            if parameter == "lower humidity":
+            tolerance = 2
+            if parameter == "humidity":
                 if dangers_data[section_name] == 'False':
-                    if predicted_values[1] < lower_humidity_limit and predicted_values[1] > lower_humidity_danger:
+                    if predicted_values[1] < lower_humidity_limit:
                         print(f"{parameter} in {section_name} - Less than the lower limit")
                         parameter_status[parameter] = f'{parameter}-3'
-                    elif predicted_values[1] < lower_humidity_limit and predicted_values[1] < lower_humidity_danger:
-                        print(f"{parameter} in {section_name} - Smaller than the danger limit! DANGER")
-                        parameter_status[parameter] = f'{parameter}-4'
+                    elif predicted_values[1] > humidity_limit and predicted_values[1] < humidity_limit_danger:
+                        print(f"{parameter} in {section_name} - Greater than the maximum")
+                        parameter_status[parameter] = f'{parameter}-1'
+                    elif predicted_values[1] > humidity_limit and predicted_values[1] > humidity_limit_danger:
+                        print(f"{parameter} in {section_name} - Greater than the danger limit! DANGER")
+                        parameter_status[parameter] = f'{parameter}-2'
                     else:
                         print(f"{parameter} in {section_name} - OK")
                         parameter_status[parameter] = f'{parameter}-0'
                 else:
-                    if predicted_values[1] <= safe_values[parameter]:
-                        print(f"{parameter} in {section_name} - Less than the lower safe value")
-                        parameter_status[parameter] = f'{parameter}-1'
-                    else:
-                        print(f"{parameter} in {section_name} - No more danger")
+                    if safe_values[parameter] - tolerance <= predicted_values[1] <= safe_values[parameter] + tolerance:
+                        print(f"{parameter} in {section_name} - Approximately equal to safe value")
                         parameter_status[parameter] = f'{parameter}-0'
+
             else:
                 if dangers_data[section_name] == 'False':
                     if predicted_values[1] > limits[parameter] and predicted_values[1] < dangers[parameter]:

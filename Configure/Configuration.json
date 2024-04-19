@@ -10,8 +10,7 @@
     "co": 100,
     "co2": 5000,
     "fineDust": 50,
-    "humidity": 60,
-    "lower humidity": 20
+    "humidity": 60
   },
   "safeValue": {
     "co": 10,
