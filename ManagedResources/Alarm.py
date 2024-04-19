@@ -43,9 +43,10 @@ class Alarm:
     def activeAlarm(self):
         self.section.alarmState = True
         self.client_mqtt.publish(f"Alarm/{self.section.section_name}", "ACTIVE")
-        print('ALARM ACTIVATED')
+        print(self.section.section_name, 'ALARM ACTIVATED')
 
     def disableAlarm(self):
+        if self.section.alarmState:
+            print(self.section.section_name, 'ALARM DEACTIVATED')
         self.section.alarmState = False
         self.client_mqtt.publish(f"Alarm/{self.section.section_name}", "NOT ACTIVE")
-        print('ALARM DEACTIVATED')

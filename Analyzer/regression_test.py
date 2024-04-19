@@ -30,7 +30,7 @@ def getParameterNames():
 
 def getParametersData(section_name, param_name):
     key = f'industry/{section_name}/{param_name}'
-    # esempio per recuperare solo i primi 60 valori della lista -> DA CAMBIARE
+    # Recupero degli ultimi 60 valori salvati nel database
     data = database.lrange(key, 0, 59)
     # Parsing dei valori del JSON e recupero dei valori 'value'
     decoded_data = []
@@ -44,7 +44,7 @@ def getParametersData(section_name, param_name):
 
 
 def getParametersLimit():
-    # Recupero del valore JSON dalla chiave "Configuration.js"
+    # Recupero del valore JSON dalla chiave "Config_data"
     config = None
     while config is None:
         config = database.get("Config_data")
@@ -57,9 +57,9 @@ def getParametersLimit():
     dangers = json_data.get("danger", {})
     safe_values = json_data.get("safeValue", {})
 
-    print("Limiti JSON:", limits)
-    print("Dangers JSON:", dangers)
-    print("Safes JSON:", safe_values)
+    # print("Limiti JSON:", limits)
+    # print("Dangers JSON:", dangers)
+    # print("Safes JSON:", safe_values)
 
     return limits, dangers, safe_values
 
@@ -68,10 +68,9 @@ def getSectionAlarm(section_name):
     key = f'alarmState/{section_name}'
     danger = database.lindex(key, 0)
     if danger:
-        # Decodifica la stringa JSON in un dizionario Python
         danger_dict = json.loads(danger.decode('utf-8'))
 
-        # Estrai il valore dalla chiave "value" nel dizionario
+        # Estrae il valore dalla chiave "value" nel dizionario
         danger_value = danger_dict.get('value')
 
         return danger_value
@@ -126,45 +125,8 @@ def predictNextValues(values, window_size, num_predictions):
     return next_values.flatten()
 
 
-def getLowerHumidityLimits():
-
-    config = None
-    while config is None:
-        config = database.get("Config_data")
-        if config is None:
-            print("Data not found. New attempt in 1 second...")
-            time.sleep(1)
-
-    json_data = json.loads(config)
-    limits = json_data.get("limits", {})
-
-    lower_humidity_limit = limits.get("lower humidity")
-
-    return lower_humidity_limit
-def getHumidityLimits():
-
-    config = None
-    while config is None:
-        config = database.get("Config_data")
-        if config is None:
-            print("Data not found. New attempt in 1 second...")
-            time.sleep(1)
-
-    json_data = json.loads(config)
-    limits = json_data.get("limits", {})
-    dangers = json_data.get("danger", {})
-
-    humidity_limit = limits.get("humidity")
-    humidity_limit_danger = dangers.get ("humidity")
-
-    return humidity_limit, humidity_limit_danger
-
-
 def checkLimits(parameters_data, limits, dangers, safe_values, dangers_data):
     parameter_status = {}
-
-    lower_humidity_limit = getLowerHumidityLimits()
-    humidity_limit, humidity_limit_danger = getHumidityLimits()
 
     for section_name, section_values in parameters_data.items():
         # print("\nVALORI ATTUALI per", section_name, ":")
@@ -175,55 +137,35 @@ def checkLimits(parameters_data, limits, dangers, safe_values, dangers_data):
             print("Limit = ", limits[parameter])
             print("Danger = ", dangers[parameter])
             print("Safe = ", safe_values[parameter])
-            print("ALARM STATE = ", dangers_data[section_name])
+            # print("ALARM STATE = ", dangers_data[section_name])
 
-            # 0 -> Parameter lower than the limit
+            # 0 -> Parameter in the safe range
             # 1 -> Parameter higher than the limit
             # 2 -> Parameter higher than the danger value
             # 3 -> Parameter lower than the minimum
-            # 4 -> Parameter lower than the danger value
 
             tolerance = 2
-            if parameter == "humidity":
-                if dangers_data[section_name] == 'False':
-                    if predicted_values[1] < lower_humidity_limit:
-                        print(f"{parameter} in {section_name} - Less than the lower limit")
-                        parameter_status[parameter] = f'{parameter}-3'
-                    elif predicted_values[1] > humidity_limit and predicted_values[1] < humidity_limit_danger:
-                        print(f"{parameter} in {section_name} - Greater than the maximum")
-                        parameter_status[parameter] = f'{parameter}-1'
-                    elif predicted_values[1] > humidity_limit and predicted_values[1] > humidity_limit_danger:
-                        print(f"{parameter} in {section_name} - Greater than the danger limit! DANGER")
-                        parameter_status[parameter] = f'{parameter}-2'
-                    else:
-                        print(f"{parameter} in {section_name} - OK")
-                        parameter_status[parameter] = f'{parameter}-0'
+            print("Valore previsto: ", predicted_values[1])
+            if dangers_data[section_name] == 'False':
+                if predicted_values[1] > (limits[parameter] - tolerance) and predicted_values[1] < (dangers[parameter] - tolerance):
+                    print(f"{parameter} in {section_name} - Greater than the maximum")
+                    parameter_status[parameter] = f'{parameter}-1'
+                elif predicted_values[1] > (dangers[parameter] - tolerance):
+                    print(f"{parameter} in {section_name} - Greater than the danger limit! DANGER")
+                    parameter_status[parameter] = f'{parameter}-2'
+                elif parameter == "humidity" and predicted_values[1] < (limits["lower humidity"] + tolerance):
+                    print(f"{parameter} in {section_name} - Lower than the the minimum value")
+                    parameter_status[parameter] = f'{parameter}-3'
                 else:
-                    if safe_values[parameter] - tolerance <= predicted_values[1] <= safe_values[parameter] + tolerance:
-                        print(f"{parameter} in {section_name} - Approximately equal to safe value")
-                        parameter_status[parameter] = f'{parameter}-0'
-
+                    print(f"{parameter} in {section_name} - OK")
+                    parameter_status[parameter] = f'{parameter}-0'
             else:
-                if dangers_data[section_name] == 'False':
-                    if predicted_values[1] > limits[parameter] and predicted_values[1] < dangers[parameter]:
-                        print(f"{parameter} in {section_name} - Greater than the maximum")
-                        parameter_status[parameter] = f'{parameter}-1'
-                    elif predicted_values[1] > limits[parameter] and predicted_values[1] > dangers[parameter]:
-                        print(f"{parameter} in {section_name} - Greater than the danger limit! DANGER")
-                        parameter_status[parameter] = f'{parameter}-2'
-                    else:
-                        print(f"{parameter} in {section_name} - OK")
-                        parameter_status[parameter] = f'{parameter}-0'
+                if predicted_values[1] <= (safe_values[parameter] + tolerance):
+                    print(f"{parameter} in {section_name} - No more danger")
+                    parameter_status[parameter] = f'{parameter}-0'
                 else:
-                    if predicted_values[1] <= safe_values[parameter]:
-                        print(f"{parameter} in {section_name} - No more danger")
-                        parameter_status[parameter] = f'{parameter}-0'
-                    else:
-                        print(f"{parameter} in {section_name} - Greater than the danger limit! DANGER")
-                        parameter_status[parameter] = f'{parameter}-2'
-
-
-
+                    print(f"{parameter} in {section_name} - Greater than the danger limit! DANGER")
+                    parameter_status[parameter] = f'{parameter}-2'
 
         # conversione del dizionario in una stringa nel formato x/y/z/k in cui:
         # x = co - stato
@@ -235,16 +177,8 @@ def checkLimits(parameters_data, limits, dangers, safe_values, dangers_data):
 
         client_mqtt.publish(f"status/{section_name}", status_string)
 
+
 def checkAlarmActive(dangers_data):
-    """
-    Verifica se almeno una delle sezioni ha l'allarme attivo.
-
-    Argomenti:
-    dangers_data (dict): Dati sugli allarmi per ogni sezione.
-
-    Ritorna:
-    bool: True se almeno una delle sezioni ha l'allarme attivo, altrimenti False.
-    """
     for section_name, alarm_state in dangers_data.items():
         if alarm_state != 'False':
             return True
@@ -265,11 +199,12 @@ if __name__ == '__main__':
     parameters = getParameterNames()
     print("PARAM!" + str(parameters))
 
-    alarm_active = False  # impostiamo che all'inizio gli allarmi sono tutti spenti
+    alarm_active = False  # Inizialmente allarmi spenti
 
     while True:
-        # Definizione array che conterrà i valori dei parametri
+        # Dizionario che conterrà i dati recuperati dal DB
         parameters_data = {}
+        # Dizionario che conterrà lo stato degli allarmi
         dangers_data = {}
 
         # Recupero dei dati dal database
@@ -281,20 +216,19 @@ if __name__ == '__main__':
                 section_values[parameter] = data
             parameters_data[section] = section_values
 
-        print("ALLARMI:" + str(dangers_data))
+        print("Alarm state:" + str(dangers_data))
 
         alarm_active = checkAlarmActive(dangers_data)  # controllo se una delle 3 sezioni ha l'allarme attivato
 
-        # check dei limiti
+        # Recupero dei limiti
         limits, dangers, safe_values = getParametersLimit()
 
-        # lower_humidity_limit = getLowerHumidityLimit()
-        # print("Lower Humidity Limit:", lower_humidity_limit)
-
-        # controllo dei limiti e pubblicazione dello stato
+        # Controllo dei limiti e pubblicazione dello stato
         checkLimits(parameters_data, limits, dangers, safe_values, dangers_data)
 
         if alarm_active:
+            print("Sampling time = 2")
             time.sleep(2)  # controllo ogni 2 secondi se l'allarme è attivo in 1 delle 3 sezioni
         else:
             time.sleep(4)  # controllo ogni 4 secondi se l'allarme non è attivo
+            print("Sampling time = 4")

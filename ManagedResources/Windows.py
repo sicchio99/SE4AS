@@ -41,21 +41,21 @@ class Windows:
         elif execution[0] == 'OFF':
             self.closeWindows()
         else:
-            print("Communication error!")
+            print(self.section.section_name, "Communication error!")
 
     def openWindows(self, power):
         self.section.co -= power//2
         if self.section.co < 0:
             self.section.co = 0
-        self.section.co2 -= power
+        self.section.co2 -= power*5
         if self.section.co2 < 0:
             self.section.co2 = 0
         if power == 4:
             print(f"Windows partially open - {self.section.section_name}")
         else:
             print(f"Windows open - {self.section.section_name}")
-        self.client_mqtt.publish(f"Window/{self.section.section_name}", "Open")
+        # self.client_mqtt.publish(f"Window/{self.section.section_name}", "Open")
 
     def closeWindows(self):
         print(f"Windows close - {self.section.section_name}")
-        self.client_mqtt.publish(f"Window/{self.section.section_name}", "Close")
+        # self.client_mqtt.publish(f"Window/{self.section.section_name}", "Close")

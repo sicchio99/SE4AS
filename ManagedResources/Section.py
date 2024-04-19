@@ -47,6 +47,8 @@ class Section:
             self.humidity += random.randint(-1, 1)
             if self.humidity < 0:
                 self.humidity = 0
+            if self.humidity > 100:
+                self.humidity = 100
 
             # self.co = min(max(0, self.co), 500)
             # self.co2 = min(max(0, self.co2), 1000)

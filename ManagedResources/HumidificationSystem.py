@@ -45,7 +45,7 @@ class HumidificationSystem:
         elif execution[1] == 'OFF':
             self.constantHumidity()
         else:
-            print("Communication error!")
+            print(self.section.section_name, "Communication error!")
 
     def increaseHumidity(self, power):
         self.section.humidity = self.section.humidity + power//2
@@ -56,7 +56,7 @@ class HumidificationSystem:
             print(f"Humidification System HUMIDIFY at medium power - {self.section.section_name}")
         else:
             print(f"Humidification System HUMIDIFY at maximum power - {self.section.section_name}")
-        self.client_mqtt.publish(f"HumidificationSystem/{self.section.section_name}", "UP")
+        # self.client_mqtt.publish(f"HumidificationSystem/{self.section.section_name}", "UP")
 
     def decreaseHumidity(self, power):
         self.section.humidity = self.section.humidity - power
@@ -67,9 +67,9 @@ class HumidificationSystem:
             print(f"Humidification System DEHUMIDIFY at medium power - {self.section.section_name}")
         else:
             print(f"Humidification System DEHUMIDIFY at maximum power - {self.section.section_name}")
-        self.client_mqtt.publish(f"HumidificationSystem/{self.section.section_name}", "DOWN")
+        # self.client_mqtt.publish(f"HumidificationSystem/{self.section.section_name}", "DOWN")
 
     def constantHumidity(self):
         print(f"Humidification System OFF - {self.section.section_name}")
-        self.client_mqtt.publish(f"HumidificationSystem/{self.section.section_name}", "OFF")
+        # self.client_mqtt.publish(f"HumidificationSystem/{self.section.section_name}", "OFF")
 

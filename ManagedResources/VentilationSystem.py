@@ -40,22 +40,22 @@ class VentilationSystem:
         elif execution[0] == 'OFF':
             self.disableVentilation()
         else:
-            print("Communication error!")
+            print(self.section.section_name, "Communication error!")
 
     def activeVentilation(self, power):
         self.section.co -= power//2
         if self.section.co < 0:
             self.section.co = 0
-        self.section.co2 -= power
+        self.section.co2 -= power*5
         if self.section.co2 < 0:
             self.section.co2 = 0
         if power == 4:
             print(f"Ventilation System ON at medium power - {self.section.section_name}")
         else:
             print(f"Ventilation System ON at maximum power - {self.section.section_name}")
-        self.client_mqtt.publish(f"VentilationSystem/{self.section.section_name}", "Active")
+        # self.client_mqtt.publish(f"VentilationSystem/{self.section.section_name}", "Active")
 
     def disableVentilation(self):
         print(f"Ventilation System OFF - {self.section.section_name}")
-        self.client_mqtt.publish(f"VentilationSystem/{self.section.section_name}", "Not Active")
+        # self.client_mqtt.publish(f"VentilationSystem/{self.section.section_name}", "Not Active")
 

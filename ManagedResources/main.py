@@ -15,7 +15,7 @@ if __name__ == '__main__':
     section_b = Section(section_name="Section_b", co=20, co2=930, fineDust=20, humidity=40)
     sections.append(section_b)
     # section_c = Section(section_name="Section_c", co=12, co2=650, fineDust=15, humidity=55)
-    section_c = Section(section_name="Section_c", co=120, co2=650, fineDust=15, humidity=55)
+    section_c = Section(section_name="Section_c", co=12, co2=5200, fineDust=15, humidity=55)
     sections.append(section_c)
 
     while True:

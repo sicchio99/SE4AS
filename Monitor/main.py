@@ -18,18 +18,10 @@ def on_message(client, userdata, msg):
         topic = f"alarmState/{key[1]}"
     else:
         topic = str(msg.topic)
-    # chiave = str(msg.topic) + "-grafana"
-    # print(str(msg.topic + " -> " + payload))
-    # Scrittura nel database per grafana
+
     userdata.set(topic + "-grafana", payload)
 
-    # Inserisci il valore nella lista associata alla chiave
-    # database.rpush(chiave, payload)
-    # Aggiungi il timestamp al sorted set
-    # database.zadd('timestamps:' + chiave, {payload: time.time()})
-
     elemento = {'value': payload, 'timestamp': time.time()}
-    # userdata.lpush(str(msg.topic), json.dumps(elemento)) #lpush aggiunge in testa, rpush in coda
     userdata.lpush(topic, json.dumps(elemento))  # lpush aggiunge in testa, rpush in coda
 
     print(str(msg.topic + " -> " + payload))

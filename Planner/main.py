@@ -22,14 +22,17 @@ def on_message(client, userdata, msg):
         if decoposed_state[1] == '0':
             plan += "/no_actions"
             print(f"{topic[1]} - {decoposed_state[0]}: no_actions")
+        elif decoposed_state[1] == '1':
+            plan += f"/decrease"
+            print(f"{topic[1]} - {decoposed_state[0]}: decrease")
         elif decoposed_state[1] == '2':
             plan += "/danger"
             print(f"{topic[1]} - {decoposed_state[0]}: danger")
         elif decoposed_state[1] == '3':
+            plan += "/increase"
             print(f"{topic[1]} - {decoposed_state[0]}: increase")
         else:
-            plan += f"/decrease"
-            print(f"{topic[1]} - {decoposed_state[0]}: decrease")
+            print(f"{topic[1]} - {decoposed_state[0]}: Error")
 
     # plan = stringa da pubblicare sul canale della sezione. Formato: /string1/string2/string3/string4
     # string x = no_actions o decrease
