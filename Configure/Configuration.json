@@ -3,13 +3,15 @@
     "co": 40,
     "co2": 1000,
     "fineDust": 25,
-    "humidity": 50
+    "humidity": 50,
+    "lower humidity": 30
   },
   "danger": {
     "co": 100,
     "co2": 5000,
     "fineDust": 50,
-    "humidity": 60
+    "humidity": 60,
+    "lower humidity": 20
   },
   "safeValue": {
     "co": 10,
