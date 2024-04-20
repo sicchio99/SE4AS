@@ -33,10 +33,10 @@ class Windows:
     def on_message(self, client, userdata, msg):
         payload = msg.payload.decode("utf-8")
         execution = payload.split("/")
-        print("ON MESSAGE:" + str(execution))
+        print(self.section.section_name, "WIDNOWS ON MESSAGE:" + str(execution))
         if execution[0] == 'ON':
             self.openWindows(4)
-        elif execution[0] == 'DANGER':
+        elif execution[0] == 'DANGER-CO' or execution[0] == 'DANGER-CO2' or execution[0] == 'DANGER-ALL':
             self.openWindows(8)
         elif execution[0] == 'OFF':
             self.closeWindows()

@@ -32,10 +32,10 @@ class VentilationSystem:
     def on_message(self, client, userdata, msg):
         payload = msg.payload.decode("utf-8")
         execution = payload.split("/")
-        print("ON MESSAGE:" + str(execution))
+        print(self.section.section_name, "VENTILATION ON MESSAGE:" + str(execution))
         if execution[0] == 'ON':
             self.activeVentilation(4)
-        elif execution[0] == 'DANGER':
+        elif execution[0] == 'DANGER-CO' or execution[0] == 'DANGER-CO2' or execution[0] == 'DANGER-ALL':
             self.activeVentilation(10)
         elif execution[0] == 'OFF':
             self.disableVentilation()

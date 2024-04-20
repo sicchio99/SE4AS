@@ -3,6 +3,7 @@ import json
 import time
 import paho.mqtt.client as mqtt
 import numpy as np
+import ast
 from numpy import mean
 from sklearn.linear_model import LinearRegression
 
@@ -125,7 +126,7 @@ def predictNextValues(values, window_size, num_predictions):
     return next_values.flatten()
 
 
-def checkLimits(parameters_data, limits, dangers, safe_values, dangers_data):
+def checkLimits(parameters_data, limits, dangers, safe_values, section_alarm):
     parameter_status = {}
 
     for section_name, section_values in parameters_data.items():
@@ -137,7 +138,7 @@ def checkLimits(parameters_data, limits, dangers, safe_values, dangers_data):
             print("Limit = ", limits[parameter])
             print("Danger = ", dangers[parameter])
             print("Safe = ", safe_values[parameter])
-            # print("ALARM STATE = ", dangers_data[section_name])
+            print("ALARM STATE = ", section_alarm[section_name][parameter])
 
             # 0 -> Parameter in the safe range
             # 1 -> Parameter higher than the limit
@@ -146,7 +147,7 @@ def checkLimits(parameters_data, limits, dangers, safe_values, dangers_data):
 
             tolerance = 2
             print("Valore previsto: ", predicted_values[1])
-            if dangers_data[section_name] == 'False':
+            if section_alarm[section_name][parameter] is False:
                 if predicted_values[1] > (limits[parameter] - tolerance) and predicted_values[1] < (dangers[parameter] - tolerance):
                     print(f"{parameter} in {section_name} - Greater than the maximum")
                     parameter_status[parameter] = f'{parameter}-1'
@@ -185,6 +186,21 @@ def checkAlarmActive(dangers_data):
     return False
 
 
+def getSectionParameterAlarm(section_name):
+    key = f'alarmType/{section_name}'
+    danger = database.lindex(key, 0)
+    if danger:
+        danger_dict = json.loads(danger.decode('utf-8'))
+
+        # Estrae il valore dalla chiave "value" nel dizionario
+        danger_value_str = danger_dict.get('value')
+        danger_value = ast.literal_eval(danger_value_str)
+
+        return danger_value
+    else:
+        return None
+
+
 if __name__ == '__main__':
     # connessione al database
     database = redis.Redis(host='redis', port=6379, db=0)
@@ -206,10 +222,14 @@ if __name__ == '__main__':
         parameters_data = {}
         # Dizionario che conterrà lo stato degli allarmi
         dangers_data = {}
+        # Dizionario che conterrà gli allarmi dei prametri per ogni sezione
+        section_alarm = {}
 
         # Recupero dei dati dal database
         for section in sections:
             dangers_data[section] = getSectionAlarm(section)
+            # alarmValue_str = database.lindex(f'alarmState/{section}', 0)
+            section_alarm[section] = getSectionParameterAlarm(section)
             section_values = {}
             for parameter in parameters:
                 data = getParametersData(section, parameter)
@@ -217,6 +237,7 @@ if __name__ == '__main__':
             parameters_data[section] = section_values
 
         print("Alarm state:" + str(dangers_data))
+        print("Alarm type:" + str(section_alarm))
 
         alarm_active = checkAlarmActive(dangers_data)  # controllo se una delle 3 sezioni ha l'allarme attivato
 
@@ -224,7 +245,7 @@ if __name__ == '__main__':
         limits, dangers, safe_values = getParametersLimit()
 
         # Controllo dei limiti e pubblicazione dello stato
-        checkLimits(parameters_data, limits, dangers, safe_values, dangers_data)
+        checkLimits(parameters_data, limits, dangers, safe_values, section_alarm)
 
         if alarm_active:
             print("Sampling time = 2")

@@ -20,8 +20,14 @@ def on_message(client, userdata, msg):
     if plan[1] == "no_actions" and plan[2] == "no_actions":
         executions += "OFF"
         print(f"{topic[1]}: deactive ventilation system and close the windows")
-    elif plan[1] == "danger" or plan[2] == "danger":
-        executions += "DANGER"
+    elif plan[1] == "danger" and plan[2] != "danger":
+        executions += "DANGER-CO"
+        print(f"{topic[1]}: open the windows, active the ventilation at the maximum power and active the alarm!")
+    elif plan[1] != "danger" and plan[2] == "danger":
+        executions += "DANGER-CO2"
+        print(f"{topic[1]}: open the windows, active the ventilation at the maximum power and active the alarm!")
+    elif plan[1] == "danger" and plan[2] == "danger":
+        executions += "DANGER-ALL"
         print(f"{topic[1]}: open the windows, active the ventilation at the maximum power and active the alarm!")
     else:
         executions += "ON"
@@ -40,8 +46,11 @@ def on_message(client, userdata, msg):
     elif plan[3] != "danger" and plan[4] == "danger":
         executions += "/DANGER-D"
         print(f"{topic[1]}: Dehumidify the air at the maximum power and active the alarm!")
-    elif plan[3] == "danger":
+    elif plan[3] == "danger" and plan[4] != "danger":
         executions += "/DANGER-H"
+        print(f"{topic[1]}: Humidify the air at the maximum power and active the alarm!")
+    elif plan[3] == "danger" and plan[4] == "danger":
+        executions += "/DANGER-ALL"
         print(f"{topic[1]}: Humidify the air at the maximum power and active the alarm!")
     else:
         print("ERROR!")

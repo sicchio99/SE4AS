@@ -33,10 +33,10 @@ class HumidificationSystem:
     def on_message(self, client, userdata, msg):
         payload = msg.payload.decode("utf-8")
         execution = payload.split("/")
-        print("ON MESSAGE:" + str(execution))
+        print(self.section.section_name, "HUMIDIFICATION ON MESSAGE:" + str(execution))
         if execution[1] == 'HUMIDIFY':
             self.increaseHumidity(2)
-        elif execution[1] == 'DANGER-H':
+        elif execution[1] == 'DANGER-H' or execution[1] == 'DANGER-ALL':
             self.increaseHumidity(6)
         elif execution[1] == 'DEHUMIDIFY':
             self.decreaseHumidity(2)

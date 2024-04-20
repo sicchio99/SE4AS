@@ -16,6 +16,8 @@ def on_message(client, userdata, msg):
     key = msg.topic.split("/")
     if key[2] == "alarmState":
         topic = f"alarmState/{key[1]}"
+    elif key[2] == "alarmType":
+        topic = f"alarmType/{key[1]}"
     else:
         topic = str(msg.topic)
 

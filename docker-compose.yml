@@ -21,6 +21,7 @@ services:
     container_name: redis_container
     ports:
       - "6379:6379"
+    restart: always
     #Comando per avviare il DB senza persistenza -> db vuoto ad ogni avvio
     #command: [ "redis-server", "--appendonly", "no", "--save", "", "--dir", "/data" ]
     volumes:

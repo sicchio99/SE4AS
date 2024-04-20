@@ -17,15 +17,12 @@ class Section:
 
     def __init__(self, section_name: str, co: int, co2: int, fineDust: int, humidity: int):
         self.section_name = section_name
-        # self.co = random.randint(0, 500)
-        # self.co2 = random.randint(0, 1000)
-        # self.fineDust = random.randint(0, 160)
-        # self.humidity = random.randint(0, 200)
         self.co = co
         self.co2 = co2
         self.fineDust = fineDust
         self.humidity = humidity
         self.alarmState = False
+        self.alarmType = {'co': False, 'co2': False, 'fineDust': False, 'humidity': False}
         self.actuators = [Windows.Windows(self),
                           VentilationSystem.VentilationSystem(self),
                           HumidificationSystem.HumidificationSystem(self),
@@ -60,6 +57,7 @@ class Section:
         client.publish(f"industry/{self.section_name}/fineDust", self.fineDust)
         client.publish(f"industry/{self.section_name}/humidity", self.humidity)
         client.publish(f"industry/{self.section_name}/alarmState", self.alarmState)
+        client.publish(f"industry/{self.section_name}/alarmType", str(self.alarmType))
 
         print(f'Publishing simulated data for room {self.section_name}')
 
