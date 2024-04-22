@@ -2,7 +2,10 @@ import redis
 import json
 import time
 import paho.mqtt.client as mqtt
-from numpy import mean
+import numpy as np
+import ast
+from sklearn.linear_model import LinearRegression
+import influxdb_client
 
 
 def getSectionNames():
@@ -13,6 +16,25 @@ def getSectionNames():
         section = decoded_key.split('/')[1]  # Ottengo nome sezione da chiave
         section_names.add(section)  # Aggiungo nome della sezione al set
     return sorted(section_names)
+
+
+def getSectionsAndParameters():
+    query_api = client.query_api()
+    query_section = f'import "influxdata/influxdb/schema" schema.tagValues(bucket: "seas", tag: "section")'
+    query_parameter = f'import "influxdata/influxdb/schema" schema.fieldKeys(bucket: "{bucket}")'
+    section_results = query_api.query(org=org, query=query_section)
+    parameter_results = query_api.query(org=org, query=query_parameter)
+
+    sections_name = []
+    for element in section_results.to_values():
+        sections_name.append(list(element)[2])
+
+    parameters_name = []
+    for element in parameter_results.to_values():
+        if list(element)[2] != 'alarmState' and list(element)[2] != 'alarmType' and list(element)[2] != 'value':
+            parameters_name.append(list(element)[2])
+
+    return sections_name, parameters_name
 
 
 def getParameterNames():
@@ -28,7 +50,7 @@ def getParameterNames():
 
 def getParametersData(section_name, param_name):
     key = f'industry/{section_name}/{param_name}'
-    # esempio per recuperare solo i primi 60 valori della lista -> DA CAMBIARE
+    # Recupero degli ultimi 60 valori salvati nel database
     data = database.lrange(key, 0, 59)
     # Parsing dei valori del JSON e recupero dei valori 'value'
     decoded_data = []
@@ -42,7 +64,7 @@ def getParametersData(section_name, param_name):
 
 
 def getParametersLimit():
-    # Recupero del valore JSON dalla chiave "Configuration.js"
+    # Recupero del valore JSON dalla chiave "Config_data"
     config = None
     while config is None:
         config = database.get("Config_data")
@@ -50,25 +72,14 @@ def getParametersLimit():
             print("Data not found. New attempt in 1 second...")
             time.sleep(1)
 
-    # Parsing dei dati JSON e assegnazione a limits
-    # limits = json.loads(config)
-    # print("JSON data from Database:", config)
-    # print("Limitations obtained from parsing JSON data:", limits)
-
-    # Stampa il tipo di dati per ciascun valore dei limiti
-    # for key, value in limits.items():
-        # print(f"Tipo di dati per il limite di {key}: {type(value)}")
-
-    # return limits
-
     json_data = json.loads(config)
     limits = json_data.get("limits", {})  # Estrae oggetto "limits" dal JSON (default: dizionario vuoto se non trovato)
     dangers = json_data.get("danger", {})
     safe_values = json_data.get("safeValue", {})
 
-    print("Limiti JSON:", limits)
-    print("Dangers JSON:", dangers)
-    print("Safes JSON:", safe_values)
+    # print("Limiti JSON:", limits)
+    # print("Dangers JSON:", dangers)
+    # print("Safes JSON:", safe_values)
 
     return limits, dangers, safe_values
 
@@ -77,10 +88,9 @@ def getSectionAlarm(section_name):
     key = f'alarmState/{section_name}'
     danger = database.lindex(key, 0)
     if danger:
-        # Decodifica la stringa JSON in un dizionario Python
         danger_dict = json.loads(danger.decode('utf-8'))
 
-        # Estrai il valore dalla chiave "value" nel dizionario
+        # Estrae il valore dalla chiave "value" nel dizionario
         danger_value = danger_dict.get('value')
 
         return danger_value
@@ -88,41 +98,89 @@ def getSectionAlarm(section_name):
         return None
 
 
-def checkLimits(parameters_data, limits, dangers, safe_values):
+def predictNextValues(values, window_size, num_predictions):
+    """
+    Prevede più valori successivi nella sequenza utilizzando regressione lineare con una finestra mobile.
+
+    Argomenti:
+    values (list): Lista di elementi della sequenza storica.
+    window_size (int): Dimensione della finestra mobile (numero di elementi passati da utilizzare per la previsione).
+    num_predictions (int): Numero di valori successivi da prevedere.
+
+    Ritorna:
+    numpy.ndarray: Array di valori previsti per i prossimi elementi nella sequenza.
+    """
+
+    # Inverti l'ordine degli elementi nella lista values
+    values = values[::-1]
+
+    # Converti la lista di valori in un array NumPy
+    values_array = np.array(values)
+
+    # Prepariamo i dati per la regressione lineare
+    X = []
+    y = []
+
+    # Creiamo le finestre di dati e i corrispondenti target
+    for i in range(len(values_array) - window_size - num_predictions + 1):
+        X.append(values_array[i:i+window_size])  # Utilizziamo i valori passati come feature
+        y.append(values_array[i+window_size:i+window_size+num_predictions])  # I valori successivi sono i target da prevedere
+
+    X = np.array(X)
+    y = np.array(y)
+
+    # Trasformiamo X in un array bidimensionale
+    X = X.reshape(-1, window_size)
+
+    # Creiamo un modello di regressione lineare
+    model = LinearRegression()
+
+    # Addestriamo il modello sui dati preparati
+    model.fit(X, y)
+
+    # Prevediamo i valori successivi nella sequenza
+    last_window = values_array[-window_size:]  # Prendiamo gli ultimi elementi come finestra mobile
+    next_values = model.predict(last_window.reshape(1, -1))
+
+    return next_values.flatten()
+
+
+def checkLimits(parameters_data, limits, dangers, safe_values, section_alarm):
     parameter_status = {}
-    # print("LIMITI:")
-    # for parameter, limit in limits.items():
-        # print(f"{parameter}: limite={limit}")
 
     for section_name, section_values in parameters_data.items():
         # print("\nVALORI ATTUALI per", section_name, ":")
         for parameter, data in section_values.items():
-            print(f"{parameter}: {data}")
-            average_value = mean(data)
-            print("Mean = ", average_value)
+            print(f"{section_name}-{parameter}: {data}")
+            predicted_values = predictNextValues(data, window_size=3, num_predictions=2)
+            print("Predicted values: ", predicted_values)
             print("Limit = ", limits[parameter])
             print("Danger = ", dangers[parameter])
             print("Safe = ", safe_values[parameter])
+            print("ALARM STATE = ", section_alarm[section_name][parameter])
 
-            # 0 -> Paramter lower than the limit
+            # 0 -> Parameter in the safe range
             # 1 -> Parameter higher than the limit
             # 2 -> Parameter higher than the danger value
-            # 3 -> Parameter lower than the no-more-danger value
+            # 3 -> Parameter lower than the minimum
 
-            if dangers_data[section_name] == 'False':
-                if average_value > limits[parameter] and average_value < dangers[parameter]:
+            tolerance = 2
+            print("Valore previsto: ", predicted_values[1])
+            if section_alarm[section_name][parameter] is False:
+                if predicted_values[1] > (limits[parameter] - tolerance) and predicted_values[1] < (dangers[parameter] - tolerance):
                     print(f"{parameter} in {section_name} - Greater than the maximum")
-                    # client_mqtt.publish(f"status/{section_name}/{parameter}", 1)
                     parameter_status[parameter] = f'{parameter}-1'
-                elif average_value > limits[parameter] and average_value > dangers[parameter]:
+                elif predicted_values[1] > (dangers[parameter] - tolerance):
                     print(f"{parameter} in {section_name} - Greater than the danger limit! DANGER")
                     parameter_status[parameter] = f'{parameter}-2'
+                elif parameter == "humidity" and predicted_values[1] < (limits["lower humidity"] + tolerance):
+                    print(f"{parameter} in {section_name} - Lower than the the minimum value")
+                    parameter_status[parameter] = f'{parameter}-3'
                 else:
                     print(f"{parameter} in {section_name} - OK")
-                    # client_mqtt.publish(f"status/{section_name}/{parameter}", 0)
                     parameter_status[parameter] = f'{parameter}-0'
             else:
-                if average_value <= safe_values[parameter]:
+                if predicted_values[1] <= (safe_values[parameter] + tolerance):
                     print(f"{parameter} in {section_name} - No more danger")
                     parameter_status[parameter] = f'{parameter}-0'
                 else:
@@ -140,7 +198,36 @@ def checkLimits(parameters_data, limits, dangers, safe_values):
         client_mqtt.publish(f"status/{section_name}", status_string)
 
 
+def checkAlarmActive(dangers_data):
+    for section_name, alarm_state in dangers_data.items():
+        if alarm_state != 'False':
+            return True
+    return False
+
+
+def getSectionParameterAlarm(section_name):
+    key = f'alarmType/{section_name}'
+    danger = database.lindex(key, 0)
+    if danger:
+        danger_dict = json.loads(danger.decode('utf-8'))
+
+        # Estrae il valore dalla chiave "value" nel dizionario
+        danger_value_str = danger_dict.get('value')
+        danger_value = ast.literal_eval(danger_value_str)
+
+        return danger_value
+    else:
+        return None
+
+
 if __name__ == '__main__':
+
+    bucket = "seas"
+    org = "univaq"
+    token = "seasinfluxdbtoken"
+    url = "http://influxdb:8086/"
+    client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
+
     # connessione al database
     database = redis.Redis(host='redis', port=6379, db=0)
     # connessione al broker
@@ -149,32 +236,49 @@ if __name__ == '__main__':
 
     # recupero nomi sezioni
     sections = getSectionNames()
+    sections_influx, parameters_influx = getSectionsAndParameters()
     print("SECTIONS!" + str(sections))
+    print("SECTIONS INFLUX!" + str(sections_influx))
+    print("PARAM INFLUX!" + str(parameters_influx))
     # recupero dei nomi dei parametri
     parameters = getParameterNames()
     print("PARAM!" + str(parameters))
 
+    alarm_active = False  # Inizialmente allarmi spenti
+
     while True:
-        # Definizione array che conterrà i valori dei parametri
+        # Dizionario che conterrà i dati recuperati dal DB
         parameters_data = {}
+        # Dizionario che conterrà lo stato degli allarmi
         dangers_data = {}
+        # Dizionario che conterrà gli allarmi dei prametri per ogni sezione
+        section_alarm = {}
 
         # Recupero dei dati dal database
         for section in sections:
             dangers_data[section] = getSectionAlarm(section)
+            # alarmValue_str = database.lindex(f'alarmState/{section}', 0)
+            section_alarm[section] = getSectionParameterAlarm(section)
             section_values = {}
             for parameter in parameters:
                 data = getParametersData(section, parameter)
                 section_values[parameter] = data
             parameters_data[section] = section_values
 
-            # print(section + ': ' + str(parameters_data[section]))
-            # print(section + " danger status = " + str(dangers_data[section]))
+        print("Alarm state:" + str(dangers_data))
+        print("Alarm type:" + str(section_alarm))
 
-        # check dei limiti
+        alarm_active = checkAlarmActive(dangers_data)  # controllo se una delle 3 sezioni ha l'allarme attivato
+
+        # Recupero dei limiti
         limits, dangers, safe_values = getParametersLimit()
 
-        # controllo dei limiti e pubblicazione dello stato
-        checkLimits(parameters_data, limits, dangers, safe_values)
+        # Controllo dei limiti e pubblicazione dello stato
+        checkLimits(parameters_data, limits, dangers, safe_values, section_alarm)
 
-        time.sleep(5)
+        if alarm_active:
+            print("Sampling time = 2")
+            time.sleep(2)  # controllo ogni 2 secondi se l'allarme è attivo in 1 delle 3 sezioni
+        else:
+            time.sleep(4)  # controllo ogni 4 secondi se l'allarme non è attivo
+            print("Sampling time = 4")

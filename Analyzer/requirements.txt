@@ -2,3 +2,4 @@ paho-mqtt~=2.0.0
 redis~=5.1.0b4
 numpy~=2.0.0rc1
 scikit-learn~=1.4.2
+influxdb-client~=1.42.0

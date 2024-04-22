@@ -1,2 +1,3 @@
 paho-mqtt~=2.0.0
 redis~=5.1.0b4
+influxdb-client~=1.42.0
