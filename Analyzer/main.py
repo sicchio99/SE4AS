@@ -98,6 +98,26 @@ def getSectionAlarm(section_name):
         return None
 
 
+def getSectionAlarmInflux(section_name):
+    query_api = client.query_api()
+
+    query = f'''
+           from(bucket: "{bucket}")
+           |> range(start: -1h)
+           |> filter(fn: (r) => r["_measurement"] == "industry_data")
+           |> filter(fn: (r) => r["_field"] == "alarmState")
+           |> filter(fn: (r) => r["section"] == "{section_name}")
+           |> last()
+       '''
+
+    result = query_api.query(org=org, query=query)
+    alarm = []
+    for element in result.to_values():
+        alarm.append(list(element)[5])
+
+    return alarm[0]
+
+
 def predictNextValues(values, window_size, num_predictions):
     """
     Prevede più valori successivi nella sequenza utilizzando regressione lineare con una finestra mobile.
@@ -257,6 +277,9 @@ if __name__ == '__main__':
         # Recupero dei dati dal database
         for section in sections:
             dangers_data[section] = getSectionAlarm(section)
+            alarmTest = getSectionAlarmInflux(section)
+            print("Alarm Redis" + section + ": " + str(dangers_data[section]))
+            print("Alarm Influx" + section + ":" + str(alarmTest))
             # alarmValue_str = database.lindex(f'alarmState/{section}', 0)
             section_alarm[section] = getSectionParameterAlarm(section)
             section_values = {}
