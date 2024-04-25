@@ -6,8 +6,10 @@ import numpy as np
 import ast
 from sklearn.linear_model import LinearRegression
 import influxdb_client
+from database import Database
 
 
+"""
 def getSectionNames():
     keys = database.keys('industry*')
     section_names = set()
@@ -16,8 +18,10 @@ def getSectionNames():
         section = decoded_key.split('/')[1]  # Ottengo nome sezione da chiave
         section_names.add(section)  # Aggiungo nome della sezione al set
     return sorted(section_names)
+"""
 
 
+"""
 def getSectionsAndParameters():
     query_api = client.query_api()
     query_section = f'import "influxdata/influxdb/schema" schema.tagValues(bucket: "seas", tag: "section")'
@@ -35,8 +39,9 @@ def getSectionsAndParameters():
             parameters_name.append(list(element)[2])
 
     return sections_name, parameters_name
+"""
 
-
+"""
 def getParameterNames():
     params = database.keys('industry*')
     param_names = set()
@@ -46,6 +51,7 @@ def getParameterNames():
         if not parameter.endswith('-grafana'):  # Aggiungo solo se non termina con '-grafana'
             param_names.add(parameter)
     return sorted(param_names)
+"""
 
 
 def getParametersData(section_name, param_name):
@@ -63,7 +69,7 @@ def getParametersData(section_name, param_name):
     return decoded_data
 
 
-def getParamtersDataInflux(section_name, param_name):
+def getParametersDataInflux(section_name, param_name):
     query_api = client.query_api()
 
     query = f'''
@@ -79,9 +85,10 @@ def getParamtersDataInflux(section_name, param_name):
     decoded_data = []
     for table in result:
         for record in table.records:
-            decoded_data.append(record.values["_value"])
+            decoded_data.append(int(record.values["_value"]))
 
     return decoded_data
+
 
 def getParametersLimit():
     # Recupero del valore JSON dalla chiave "Config_data"
@@ -127,6 +134,7 @@ def getParametersLimitInflux():
     return limits, dangers, safe_values
 
 
+"""
 def getSectionAlarm(section_name):
     key = f'alarmState/{section_name}'
     danger = database.lindex(key, 0)
@@ -139,8 +147,9 @@ def getSectionAlarm(section_name):
         return danger_value
     else:
         return None
+"""
 
-
+"""
 def getSectionAlarmInflux(section_name, alarm_var):
     query_api = client.query_api()
 
@@ -159,6 +168,7 @@ def getSectionAlarmInflux(section_name, alarm_var):
         alarm.append(list(element)[5])
 
     return alarm[0]
+"""
 
 
 def predictNextValues(values, window_size, num_predictions):
@@ -186,8 +196,9 @@ def predictNextValues(values, window_size, num_predictions):
 
     # Creiamo le finestre di dati e i corrispondenti target
     for i in range(len(values_array) - window_size - num_predictions + 1):
-        X.append(values_array[i:i+window_size])  # Utilizziamo i valori passati come feature
-        y.append(values_array[i+window_size:i+window_size+num_predictions])  # I valori successivi sono i target da prevedere
+        X.append(values_array[i:i + window_size])  # Utilizziamo i valori passati come feature
+        y.append(values_array[
+                 i + window_size:i + window_size + num_predictions])  # I valori successivi sono i target da prevedere
 
     X = np.array(X)
     y = np.array(y)
@@ -230,7 +241,8 @@ def checkLimits(parameters_data, limits, dangers, safe_values, section_alarm):
             tolerance = 2
             print("Valore previsto: ", predicted_values[1])
             if section_alarm[section_name][parameter] is False:
-                if predicted_values[1] > (limits[parameter] - tolerance) and predicted_values[1] < (dangers[parameter] - tolerance):
+                if predicted_values[1] > (limits[parameter] - tolerance) and predicted_values[1] < (
+                        dangers[parameter] - tolerance):
                     print(f"{parameter} in {section_name} - Greater than the maximum")
                     parameter_status[parameter] = f'{parameter}-1'
                 elif predicted_values[1] > (dangers[parameter] - tolerance):
@@ -268,6 +280,7 @@ def checkAlarmActive(dangers_data):
     return False
 
 
+"""
 def getSectionParameterAlarm(section_name):
     key = f'alarmType/{section_name}'
     danger = database.lindex(key, 0)
@@ -281,6 +294,7 @@ def getSectionParameterAlarm(section_name):
         return danger_value
     else:
         return None
+"""
 
 
 if __name__ == '__main__':
@@ -291,21 +305,23 @@ if __name__ == '__main__':
     url = "http://influxdb:8086/"
     client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
 
+    db = Database()
+
     # connessione al database
     database = redis.Redis(host='redis', port=6379, db=0)
     # connessione al broker
     client_mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, reconnect_on_failure=True)
     client_mqtt.connect("mosquitto", 1883)
 
-    # recupero nomi sezioni
-    sections = getSectionNames()
-    sections_influx, parameters_influx = getSectionsAndParameters()
-    # print("SECTIONS!" + str(sections))
+    # recupero nomi sezioni e parametri
+    # sections = getSectionNames()
+    sections, parameters = db.getSectionsAndParameters()  # da db influx
+    print("SECTIONS:" + str(sections))
     # print("SECTIONS INFLUX!" + str(sections_influx))
     # print("PARAM INFLUX!" + str(parameters_influx))
     # recupero dei nomi dei parametri
-    parameters = getParameterNames()
-    # print("PARAM!" + str(parameters))
+    # parameters = getParameterNames()
+    print("PARAM:" + str(parameters))
 
     alarm_active = False  # Inizialmente allarmi spenti
 
@@ -319,22 +335,23 @@ if __name__ == '__main__':
 
         # Recupero dei dati dal database
         for section in sections:
-            dangers_data[section] = getSectionAlarm(section)
-            alarmTest = getSectionAlarmInflux(section, "alarmState")
+            # dangers_data[section] = getSectionAlarm(section)
+            dangers_data[section] = db.getSectionAlarm(section, "alarmState")
             # print("Alarm Redis" + section + ": " + str(dangers_data[section]))
             # print("Alarm Influx" + section + ":" + str(alarmTest))
-            # alarmValue_str = database.lindex(f'alarmState/{section}', 0)
-            section_alarm[section] = getSectionParameterAlarm(section)
-            alarmTypeTest = getSectionAlarmInflux(section, "alarmType")
+            # section_alarm[section] = getSectionParameterAlarm(section)
+            section_alarm[section] = db.getSectionAlarm(section, "alarmType")
             # print("Alarm type Redis:" + str(section_alarm[section]))
             # print("Alarm type Influx:" + str(alarmTypeTest))
             section_values = {}
             for parameter in parameters:
                 data = getParametersData(section, parameter)
-                data_influx = getParamtersDataInflux(section, parameter)
-                section_values[parameter] = data_influx
-                print(f"Redis data for {section}-{parameter}: {data}")
-                print(f"InfluxDB data for {section}-{parameter}: {data_influx}")
+                data_influx = getParametersDataInflux(section, parameter)
+                section_values[parameter] = data
+                # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                # print(f"Redis data for {section}-{parameter}: {data}")
+                # print(f"InfluxDB data for {section}-{parameter}: {data_influx}")
+                # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             parameters_data[section] = section_values
 
         print("Alarm state:" + str(dangers_data))

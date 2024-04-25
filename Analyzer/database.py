@@ -1,5 +1,6 @@
 import influxdb_client
 import json
+import ast
 
 
 class Database:
@@ -52,7 +53,7 @@ class Database:
 
         return limits, dangers, safe_values
 
-    def getSectionAlarmInflux(self, section_name, alarm_var):
+    def getSectionAlarm(self, section_name, alarm_var):
         query_api = self.client.query_api()
 
         query = f'''
@@ -69,5 +70,28 @@ class Database:
         for element in result.to_values():
             alarm.append(list(element)[5])
 
-        return alarm[0]
+        if alarm_var != 'alarmType':
+            return alarm[0]
+        else:
+            alarm_dict = ast.literal_eval(alarm[0])
+            return alarm_dict
 
+    def getParametersData(self, section_name, param_name):
+        query_api = self.client.query_api()
+
+        query = f'''
+            from(bucket: "{self.bucket}")
+            |> range(start: -60m)
+            |> filter(fn: (r) => r["_measurement"] == "industry_data")
+            |> filter(fn: (r) => r["section"] == "{section_name}")
+            |> filter(fn: (r) => r["_field"] == "{param_name}")
+        '''
+
+        result = query_api.query(org=self.org, query=query)
+
+        decoded_data = []
+        for table in result:
+            for record in table.records:
+                decoded_data.append(int(record.values["_value"]))
+
+        return decoded_data
