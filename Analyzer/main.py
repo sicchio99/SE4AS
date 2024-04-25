@@ -63,6 +63,10 @@ def getParametersData(section_name, param_name):
     return decoded_data
 
 
+def getParamtersDataInflux(section_name, param_name):
+    print("Funzione recupero valori")
+
+
 def getParametersLimit():
     # Recupero del valore JSON dalla chiave "Config_data"
     config = None
@@ -84,6 +88,29 @@ def getParametersLimit():
     return limits, dangers, safe_values
 
 
+def getParametersLimitInflux():
+    query_api = client.query_api()
+
+    query = f'''
+        from(bucket: "seas")
+        |> range(start: -1h)
+        |> filter(fn: (r) => r["configuration"] == "configuration")
+        |> filter(fn: (r) => r["_field"] == "value")
+        |> last()
+    '''
+    result = query_api.query(org=org, query=query)
+    alarm = []
+    for element in result.to_values():
+        alarm.append(list(element)[5])
+
+    json_data = json.loads(str(alarm[0]))
+    limits = json_data.get("limits", {})  # Estrae oggetto "limits" dal JSON (default: dizionario vuoto se non trovato)
+    dangers = json_data.get("danger", {})
+    safe_values = json_data.get("safeValue", {})
+
+    return limits, dangers, safe_values
+
+
 def getSectionAlarm(section_name):
     key = f'alarmState/{section_name}'
     danger = database.lindex(key, 0)
@@ -98,14 +125,14 @@ def getSectionAlarm(section_name):
         return None
 
 
-def getSectionAlarmInflux(section_name):
+def getSectionAlarmInflux(section_name, alarm_var):
     query_api = client.query_api()
 
     query = f'''
            from(bucket: "{bucket}")
            |> range(start: -1h)
            |> filter(fn: (r) => r["_measurement"] == "industry_data")
-           |> filter(fn: (r) => r["_field"] == "alarmState")
+           |> filter(fn: (r) => r["_field"] == "{alarm_var}")
            |> filter(fn: (r) => r["section"] == "{section_name}")
            |> last()
        '''
@@ -257,12 +284,12 @@ if __name__ == '__main__':
     # recupero nomi sezioni
     sections = getSectionNames()
     sections_influx, parameters_influx = getSectionsAndParameters()
-    print("SECTIONS!" + str(sections))
-    print("SECTIONS INFLUX!" + str(sections_influx))
-    print("PARAM INFLUX!" + str(parameters_influx))
+    # print("SECTIONS!" + str(sections))
+    # print("SECTIONS INFLUX!" + str(sections_influx))
+    # print("PARAM INFLUX!" + str(parameters_influx))
     # recupero dei nomi dei parametri
     parameters = getParameterNames()
-    print("PARAM!" + str(parameters))
+    # print("PARAM!" + str(parameters))
 
     alarm_active = False  # Inizialmente allarmi spenti
 
@@ -277,11 +304,14 @@ if __name__ == '__main__':
         # Recupero dei dati dal database
         for section in sections:
             dangers_data[section] = getSectionAlarm(section)
-            alarmTest = getSectionAlarmInflux(section)
-            print("Alarm Redis" + section + ": " + str(dangers_data[section]))
-            print("Alarm Influx" + section + ":" + str(alarmTest))
+            alarmTest = getSectionAlarmInflux(section, "alarmState")
+            # print("Alarm Redis" + section + ": " + str(dangers_data[section]))
+            # print("Alarm Influx" + section + ":" + str(alarmTest))
             # alarmValue_str = database.lindex(f'alarmState/{section}', 0)
             section_alarm[section] = getSectionParameterAlarm(section)
+            alarmTypeTest = getSectionAlarmInflux(section, "alarmType")
+            # print("Alarm type Redis:" + str(section_alarm[section]))
+            # print("Alarm type Influx:" + str(alarmTypeTest))
             section_values = {}
             for parameter in parameters:
                 data = getParametersData(section, parameter)
@@ -295,6 +325,13 @@ if __name__ == '__main__':
 
         # Recupero dei limiti
         limits, dangers, safe_values = getParametersLimit()
+        limits_influx, dangers_influx, safe_values_influx = getParametersLimitInflux()
+        # print("Limits:" + str(limits))
+        # print("LimitsInflux:" + str(limits_influx))
+        # print("Dangers:" + str(dangers))
+        # print("DangersInflux:" + str(dangers_influx))
+        # print("SafeValues:" + str(safe_values))
+        # print("SafeValuesInflux:" + str(safe_values_influx))
 
         # Controllo dei limiti e pubblicazione dello stato
         checkLimits(parameters_data, limits, dangers, safe_values, section_alarm)
