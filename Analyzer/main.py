@@ -64,8 +64,24 @@ def getParametersData(section_name, param_name):
 
 
 def getParamtersDataInflux(section_name, param_name):
-    print("Funzione recupero valori")
+    query_api = client.query_api()
 
+    query = f'''
+        from(bucket: "{bucket}")
+        |> range(start: -60m)
+        |> filter(fn: (r) => r["_measurement"] == "industry_data")
+        |> filter(fn: (r) => r["section"] == "{section_name}")
+        |> filter(fn: (r) => r["_field"] == "{param_name}")
+    '''
+
+    result = query_api.query(org=org, query=query)
+
+    decoded_data = []
+    for table in result:
+        for record in table.records:
+            decoded_data.append(record.values["_value"])
+
+    return decoded_data
 
 def getParametersLimit():
     # Recupero del valore JSON dalla chiave "Config_data"
@@ -315,7 +331,10 @@ if __name__ == '__main__':
             section_values = {}
             for parameter in parameters:
                 data = getParametersData(section, parameter)
-                section_values[parameter] = data
+                data_influx = getParamtersDataInflux(section, parameter)
+                section_values[parameter] = data_influx
+                print(f"Redis data for {section}-{parameter}: {data}")
+                print(f"InfluxDB data for {section}-{parameter}: {data_influx}")
             parameters_data[section] = section_values
 
         print("Alarm state:" + str(dangers_data))
