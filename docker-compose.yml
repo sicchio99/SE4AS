@@ -61,6 +61,7 @@ services:
       - ./grafana.ini:/etc/grafana/grafana.ini
     depends_on:
       - redis
+      - influxdb
 
 
   #MAPE-K components
