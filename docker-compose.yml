@@ -35,16 +35,18 @@ services:
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=admin
-      - DOCKER_INFLUXDB_INIT_PASSWORD=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminadmin
       - DOCKER_INFLUXDB_INIT_ORG=univaq
       - DOCKER_INFLUXDB_INIT_BUCKET=seas
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=seasinfluxdbtoken
     restart: always
     volumes:
       - influxdb_data:/var/lib/influxdb
+    expose:
+      - 8086
 
 
-  #Grafana
+      #Grafana
   grafana:
     image: grafana/grafana
     container_name: grafana_container
