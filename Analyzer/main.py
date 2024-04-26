@@ -191,7 +191,7 @@ def predictNextValues(values, window_size, num_predictions):
     """
 
     # Inverti l'ordine degli elementi nella lista values
-    values = values[::-1]
+    # values = values[::-1]
 
     # Converti la lista di valori in un array NumPy
     values_array = np.array(values)
