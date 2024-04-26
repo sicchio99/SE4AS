@@ -1,6 +1,7 @@
 import influxdb_client
 import json
 import ast
+import time
 
 
 class Database:
@@ -35,12 +36,19 @@ class Database:
 
         query = f'''
             from(bucket: "seas")
-            |> range(start: -1h)
+            |> range(start: -10y)
             |> filter(fn: (r) => r["configuration"] == "configuration")
             |> filter(fn: (r) => r["_field"] == "value")
             |> last()
         '''
-        result = query_api.query(org=self.org, query=query)
+        while True:
+            result = query_api.query(org=self.org, query=query)
+            if result:
+                break  # Se il risultato non è vuoto, esci dal ciclo
+            else:
+                print("Nessun risultato trovato. Riprova tra 1 secondo...")
+                time.sleep(1)  # Attendi 1 secondo prima di riprovare
+
         alarm = []
         for element in result.to_values():
             alarm.append(list(element)[5])
@@ -81,7 +89,7 @@ class Database:
 
         query = f'''
             from(bucket: "{self.bucket}")
-            |> range(start: -60m)
+            |> range(start: -2m)
             |> filter(fn: (r) => r["_measurement"] == "industry_data")
             |> filter(fn: (r) => r["section"] == "{section_name}")
             |> filter(fn: (r) => r["_field"] == "{param_name}")

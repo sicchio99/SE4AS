@@ -53,7 +53,7 @@ def getParameterNames():
     return sorted(param_names)
 """
 
-
+"""
 def getParametersData(section_name, param_name):
     key = f'industry/{section_name}/{param_name}'
     # Recupero degli ultimi 60 valori salvati nel database
@@ -67,8 +67,9 @@ def getParametersData(section_name, param_name):
             decoded_data.append(int(value))
 
     return decoded_data
+"""
 
-
+"""
 def getParametersDataInflux(section_name, param_name):
     query_api = client.query_api()
 
@@ -88,8 +89,10 @@ def getParametersDataInflux(section_name, param_name):
             decoded_data.append(int(record.values["_value"]))
 
     return decoded_data
+"""
 
 
+"""
 def getParametersLimit():
     # Recupero del valore JSON dalla chiave "Config_data"
     config = None
@@ -109,8 +112,10 @@ def getParametersLimit():
     # print("Safes JSON:", safe_values)
 
     return limits, dangers, safe_values
+"""
 
 
+"""
 def getParametersLimitInflux():
     query_api = client.query_api()
 
@@ -132,6 +137,7 @@ def getParametersLimitInflux():
     safe_values = json_data.get("safeValue", {})
 
     return limits, dangers, safe_values
+"""
 
 
 """
@@ -308,7 +314,7 @@ if __name__ == '__main__':
     db = Database()
 
     # connessione al database
-    database = redis.Redis(host='redis', port=6379, db=0)
+    # database = redis.Redis(host='redis', port=6379, db=0)
     # connessione al broker
     client_mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, reconnect_on_failure=True)
     client_mqtt.connect("mosquitto", 1883)
@@ -345,11 +351,17 @@ if __name__ == '__main__':
             # print("Alarm type Influx:" + str(alarmTypeTest))
             section_values = {}
             for parameter in parameters:
-                data = getParametersData(section, parameter)
-                data_influx = getParametersDataInflux(section, parameter)
+                # data = getParametersData(section, parameter)
+                # data = db.getParametersData(section, parameter)
+                data = []
+                while len(data) < 5:
+                    data = db.getParametersData(section, parameter)
+                    if len(data) < 5:
+                        print("La lista di dati ha meno di 5 elementi. Riprovando...")
                 section_values[parameter] = data
                 # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 # print(f"Redis data for {section}-{parameter}: {data}")
+                # print(f"Data for {section}-{parameter}: {data}")
                 # print(f"InfluxDB data for {section}-{parameter}: {data_influx}")
                 # print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             parameters_data[section] = section_values
@@ -360,8 +372,8 @@ if __name__ == '__main__':
         alarm_active = checkAlarmActive(dangers_data)  # controllo se una delle 3 sezioni ha l'allarme attivato
 
         # Recupero dei limiti
-        limits, dangers, safe_values = getParametersLimit()
-        limits_influx, dangers_influx, safe_values_influx = getParametersLimitInflux()
+        # limits, dangers, safe_values = getParametersLimit()
+        limits, dangers, safe_values = db.getParametersLimit()
         # print("Limits:" + str(limits))
         # print("LimitsInflux:" + str(limits_influx))
         # print("Dangers:" + str(dangers))

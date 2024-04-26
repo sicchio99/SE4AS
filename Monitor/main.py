@@ -17,6 +17,7 @@ def on_connect(client, userdata, flags, reason_code, properties):
 def on_message(client, userdata, msg):
     payload = msg.payload.decode("utf-8")
     key = msg.topic.split("/")
+    """
     if key[2] == "alarmState":
         topic = f"alarmState/{key[1]}"
     elif key[2] == "alarmType":
@@ -28,6 +29,7 @@ def on_message(client, userdata, msg):
 
     elemento = {'value': payload, 'timestamp': time.time()}
     userdata.lpush(topic, json.dumps(elemento))  # lpush aggiunge in testa, rpush in coda
+    """
 
     # dbWrite(key, payload)
     db.databaseWrite(key, payload)
@@ -64,11 +66,12 @@ def dbWrite(topic, value):
 
 if __name__ == '__main__':
     # connessione al database
-    database = redis.Redis(host='redis', port=6379, db=0)
+    # database = redis.Redis(host='redis', port=6379, db=0)
     db = Database()
 
     # connessione al broker
-    client_mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, userdata=database, reconnect_on_failure=True)
+    # client_mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, userdata=database, reconnect_on_failure=True)
+    client_mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, reconnect_on_failure=True)
     client_mqtt.on_connect = on_connect
     client_mqtt.on_message = on_message
     client_mqtt.on_subscribe = on_subscribe
