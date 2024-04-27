@@ -20,8 +20,13 @@ class Database:
         # client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
         write_api = self.client.write_api(write_options=SYNCHRONOUS)
 
-        p = influxdb_client.Point("industry_data").tag("section", topic[1]).field(topic[2], value).time(
-            int(time.time()), "s")
+        if topic[2] == 'co' or topic[2] == 'co2' or topic[2] == 'fineDust' or topic[2] == 'humidity':
+            p = influxdb_client.Point("industry_data").tag("section", topic[1]).field(topic[2], int(value)).time(
+                int(time.time()), "s")
+        else:
+            p = influxdb_client.Point("industry_data").tag("section", topic[1]).field(topic[2], value).time(
+                int(time.time()), "s")
+
         try:
             write_api.write(bucket=self.bucket, org=self.org, record=p)
             print("Scrittura in InfluxDB completata con successo!")
