@@ -312,12 +312,13 @@ if __name__ == '__main__':
     client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
 
     db = Database()
-
+    print("Connessione al database...")
     # connessione al database
     # database = redis.Redis(host='redis', port=6379, db=0)
     # connessione al broker
     client_mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, reconnect_on_failure=True)
     client_mqtt.connect("mosquitto", 1883)
+    print("Connessione al broker MQTT...")
 
     # recupero nomi sezioni e parametri
     # sections = getSectionNames()
