@@ -44,18 +44,17 @@ class Database:
         while True:
             result = query_api.query(org=self.org, query=query)
             if result:
-                break  # Se il risultato non è vuoto, esci dal ciclo
+                break
             else:
-                print("Nessun risultato trovato. Riprova tra 1 secondo...")
-                time.sleep(1)  # Attendi 1 secondo prima di riprovare
+                print("No results found. Try again in 1 second...")
+                time.sleep(1)
 
         alarm = []
         for element in result.to_values():
             alarm.append(list(element)[5])
 
         json_data = json.loads(str(alarm[0]))
-        limits = json_data.get("limits",
-                               {})  # Estrae oggetto "limits" dal JSON (default: dizionario vuoto se non trovato)
+        limits = json_data.get("limits", {})
         dangers = json_data.get("danger", {})
         safe_values = json_data.get("safeValue", {})
 

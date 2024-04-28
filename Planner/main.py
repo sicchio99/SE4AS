@@ -18,24 +18,23 @@ def on_message(client, userdata, msg):
     message_key = f"plans/"+topic[1]
 
     for state in status:
-        decoposed_state = state.split("-")
-        if decoposed_state[1] == '0':
+        decomposed_state = state.split("-")
+        if decomposed_state[1] == '0':
             plan += "/no_actions"
-            print(f"{topic[1]} - {decoposed_state[0]}: no_actions")
-        elif decoposed_state[1] == '1':
+            print(f"{topic[1]} - {decomposed_state[0]}: no_actions")
+        elif decomposed_state[1] == '1':
             plan += f"/decrease"
-            print(f"{topic[1]} - {decoposed_state[0]}: decrease")
-        elif decoposed_state[1] == '2':
+            print(f"{topic[1]} - {decomposed_state[0]}: decrease")
+        elif decomposed_state[1] == '2':
             plan += "/danger"
-            print(f"{topic[1]} - {decoposed_state[0]}: danger")
-        elif decoposed_state[1] == '3':
+            print(f"{topic[1]} - {decomposed_state[0]}: danger")
+        elif decomposed_state[1] == '3':
             plan += "/increase"
-            print(f"{topic[1]} - {decoposed_state[0]}: increase")
+            print(f"{topic[1]} - {decomposed_state[0]}: increase")
         else:
-            print(f"{topic[1]} - {decoposed_state[0]}: Error")
+            print(f"{topic[1]} - {decomposed_state[0]}: Error")
 
-    # plan = stringa da pubblicare sul canale della sezione. Formato: /string1/string2/string3/string4
-    # string x = no_actions o decrease
+    # plan = string to publish on the section channel. Format: /string1/string2/string3/string4
     client_mqtt.publish(message_key, plan)
 
 
@@ -48,6 +47,7 @@ def on_subscribe(client, userdata, mid, reason_code_list, properties):
 
 if __name__ == '__main__':
 
+    # Message broker connection
     client_mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, reconnect_on_failure=True)
     client_mqtt.on_connect = on_connect
     client_mqtt.on_message = on_message

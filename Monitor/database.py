@@ -13,11 +13,6 @@ class Database:
         self.client = influxdb_client.InfluxDBClient(url=self.url, token=self.token, org=self.org)
 
     def databaseWrite(self, topic, value):
-        # bucket = "seas"
-        # org = "univaq"
-        # token = "seasinfluxdbtoken"
-        # url = "http://influxdb:8086/"
-        # client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
         write_api = self.client.write_api(write_options=SYNCHRONOUS)
 
         if topic[2] == 'co' or topic[2] == 'co2' or topic[2] == 'fineDust' or topic[2] == 'humidity':
@@ -29,8 +24,8 @@ class Database:
 
         try:
             write_api.write(bucket=self.bucket, org=self.org, record=p)
-            print("Scrittura in InfluxDB completata con successo!")
+            print("Writing in InfluxDB successfully completed!")
 
         except Exception as e:
             # Gestisci eventuali errori durante la scrittura
-            print(f"Errore durante la scrittura in InfluxDB: {e}")
+            print(f"Error when writing to InfluxDB: {e}")

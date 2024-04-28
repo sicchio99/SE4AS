@@ -25,7 +25,7 @@ class Windows:
 
     def on_connect(self, client, userdata, flags, rc, properties=None):
         if rc == 0:
-            print("Connessione MQTT avvenuta con successo")
+            print("Successful MQTT connection")
             client.subscribe(f"executions/{self.section.section_name}/#")
         else:
             print(f"Failed to connect: {rc}. loop_forever() will retry connection")
@@ -33,7 +33,7 @@ class Windows:
     def on_message(self, client, userdata, msg):
         payload = msg.payload.decode("utf-8")
         execution = payload.split("/")
-        print(self.section.section_name, "WIDNOWS ON MESSAGE:" + str(execution))
+        print(self.section.section_name, "WINDOWS ON MESSAGE:" + str(execution))
         if execution[0] == 'ON':
             self.openWindows(4)
         elif execution[0] == 'DANGER-CO' or execution[0] == 'DANGER-CO2' or execution[0] == 'DANGER-ALL':

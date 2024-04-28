@@ -16,7 +16,7 @@ def on_message(client, userdata, msg):
     message_key = f"executions/" + topic[1]
     print(topic[1], str(plan))
 
-    # Controllo su co e co2
+    # Control on CO and CO2
     if plan[1] == "no_actions" and plan[2] == "no_actions":
         executions += "OFF"
         print(f"{topic[1]}: deactive ventilation system and close the windows")
@@ -33,7 +33,7 @@ def on_message(client, userdata, msg):
         executions += "ON"
         print(f"{topic[1]}: active ventilation system and open partially the windows")
 
-    # Controllo su polveri sottili e umidità
+    # Control on Fine Dust and Humidity
     if plan[3] == "no_actions" and plan[4] == "no_actions":
         executions += "/OFF"
         print(f"{topic[1]}: turn off humidification system")
@@ -55,9 +55,9 @@ def on_message(client, userdata, msg):
     else:
         print("ERROR!")
 
-    # Pubblicazione sul canale. Messaggio con struttura: part1/part2
-    # part1 : comando agli attuatori relativi a co e co2
-    # part2 : comando agli attuatori relativi a fineDust e humidity
+    # Channel posting. Message with structure: part1/part2
+    # part1 : command to actuators related to CO and CO2
+    # part2 : command to actuators related to fineDust and humidity
 
     client_mqtt.publish(message_key, executions)
 
@@ -71,6 +71,7 @@ def on_subscribe(client, userdata, mid, reason_code_list, properties):
 
 if __name__ == '__main__':
 
+    # Message broker connection
     client_mqtt = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, reconnect_on_failure=True)
     client_mqtt.on_connect = on_connect
     client_mqtt.on_message = on_message

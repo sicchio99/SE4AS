@@ -25,31 +25,23 @@ class Alarm:
 
     def on_connect(self, client, userdata, flags, rc, properties=None):
         if rc == 0:
-            print("Connessione MQTT avvenuta con successo")
+            print("Successful MQTT connection")
             client.subscribe(f"executions/{self.section.section_name}/#")
         else:
             print(f"Failed to connect: {rc}. loop_forever() will retry connection")
 
     def check_alarm_status(self, alarms):
-        # Itera attraverso i valori nel dizionario alarmType
+        # Iterate through the values in the alarmType dictionary
         for value in alarms.values():
-            # Se trova almeno un valore True, restituisci True
+            # If one value is True, return True
             if value:
                 return True
-        # Se nessun valore True è stato trovato, restituisci False
         return False
 
     def on_message(self, client, userdata, msg):
         payload = msg.payload.decode("utf-8")
         execution = payload.split("/")
         print(self.section.section_name, "ALARM ON MESSAGE:" + str(execution))
-
-        """
-        if execution[0] == 'DANGER' or execution[1] == 'DANGER-D' or execution[1] == 'DANGER-H':
-            self.activeAlarm()
-        else:
-            self.disableAlarm()
-        """
 
         if execution[0] == 'DANGER-CO':
             self.activeAlarm(execution[0], 0)
@@ -75,7 +67,7 @@ class Alarm:
 
     def activeAlarm(self, dangerParameter, payloadPart):
         self.section.alarmState = True
-        self.client_mqtt.publish(f"Alarm/{self.section.section_name}", "ACTIVE")
+        # self.client_mqtt.publish(f"Alarm/{self.section.section_name}", "ACTIVE")
         if dangerParameter == 'DANGER-CO':
             self.section.alarmType['co'] = True
             print(self.section.section_name, 'ALARM ACTIVATED, CAUSE: CO')
@@ -128,10 +120,4 @@ class Alarm:
         print("Alarm State", self.section.section_name, alarmState)
         if not alarmState:
             self.section.alarmState = False
-            self.client_mqtt.publish(f"Alarm/{self.section.section_name}", "NOT ACTIVE")
-        """
-        if self.section.alarmState:
-            print(self.section.section_name, 'ALARM DEACTIVATED')
-        self.section.alarmState = False
-        self.client_mqtt.publish(f"Alarm/{self.section.section_name}", "NOT ACTIVE")
-        """
+            # self.client_mqtt.publish(f"Alarm/{self.section.section_name}", "NOT ACTIVE")

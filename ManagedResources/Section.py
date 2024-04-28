@@ -47,11 +47,6 @@ class Section:
             if self.humidity > 100:
                 self.humidity = 100
 
-            # self.co = min(max(0, self.co), 500)
-            # self.co2 = min(max(0, self.co2), 1000)
-            # self.fineDust = min(max(0, self.fineDust), 160)
-            # self.humidity = min(max(0, self.humidity), 200)
-
         client.publish(f"industry/{self.section_name}/co", self.co)
         client.publish(f"industry/{self.section_name}/co2", self.co2)
         client.publish(f"industry/{self.section_name}/fineDust", self.fineDust)

@@ -5,28 +5,15 @@ services:
   #Message Broker
   mosquitto:
     image: eclipse-mosquitto:latest
-    container_name: mosquitto_container_test
+    container_name: mosquitto_container
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
     restart: always
-    #networks:
-      #- test_network
     ports:
       - '1883:1883'
       - '9001:9001'
 
   #Database
-  redis:
-    image: redis:latest
-    container_name: redis_container
-    ports:
-      - "6379:6379"
-    restart: always
-    #Comando per avviare il DB senza persistenza -> db vuoto ad ogni avvio
-    #command: [ "redis-server", "--appendonly", "no", "--save", "", "--dir", "/data" ]
-    volumes:
-      - redis_data:/data
-
   influxdb:
     image: influxdb:latest
     container_name: influxdb_container
@@ -46,7 +33,7 @@ services:
       - 8086
 
 
-      #Grafana
+  #Grafana
   grafana:
     image: grafana/grafana
     container_name: grafana_container
@@ -60,7 +47,6 @@ services:
       - .grafana_data:/var/lib/grafana
       - ./grafana.ini:/etc/grafana/grafana.ini
     depends_on:
-      - redis
       - influxdb
 
 
@@ -70,26 +56,20 @@ services:
     build:
       context: ./Monitor
       dockerfile: Dockerfile
-    container_name: seas_monitor_test
+    container_name: seas_monitor_container
     restart: always
-    #networks:
-      #- test_network
     depends_on:
       - mosquitto
-      - redis
       - influxdb
 
   analyzer:
     build:
       context: ./Analyzer
       dockerfile: Dockerfile
-    container_name: seas_analyzer_test
+    container_name: seas_analyzer_container
     restart: always
-    #networks:
-      #- test_network
     depends_on:
       - mosquitto
-      - redis
       - monitor
       - influxdb
 
@@ -97,36 +77,28 @@ services:
     build:
       context: ./Planner
       dockerfile: Dockerfile
-    container_name: seas_planner_test
+    container_name: seas_planner_container
     restart: always
-    #networks:
-      #- test_network
     depends_on:
       - mosquitto
-      - redis
       - analyzer
 
   executor:
     build:
       context: ./Executor
       dockerfile: Dockerfile
-    container_name: seas_executor_test
+    container_name: seas_executor_container
     restart: always
-    #networks:
-     # - test_network
     depends_on:
       - mosquitto
-      - redis
       - planner
 
   managed_resources:
     build:
       context: ./ManagedResources
       dockerfile: Dockerfile
-    container_name: seas_resources_test
+    container_name: seas_resources_container
     restart: always
-    #networks:
-      #- test_network
     depends_on:
       - mosquitto
 
@@ -134,15 +106,10 @@ services:
     build:
       context: ./Configure
       dockerfile: Dockerfile
-    container_name: seas_configure
+    container_name: seas_configure_container
     depends_on:
-      - redis
       - influxdb
 
 volumes:
-  redis_data:
   grafana_data:
   influxdb_data:
-
-#networks:
-  #test_network:

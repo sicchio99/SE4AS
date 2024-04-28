@@ -24,7 +24,7 @@ class VentilationSystem:
 
     def on_connect(self, client, userdata, flags, rc, properties=None):
         if rc == 0:
-            print("Connessione MQTT avvenuta con successo")
+            print("Successful MQTT connection")
             client.subscribe(f"executions/{self.section.section_name}/#")
         else:
             print(f"Failed to connect: {rc}. loop_forever() will retry connection")
