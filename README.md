@@ -53,3 +53,35 @@ The software has been entirely implemented using the Python programming language
 
 
 <h1 style="text-align: center;">SYSTEM ARCHITECTURE</h1>
+
+![Logo GitHub](https://github.com/sicchio99/SE4AS/blob/main/SystemArchitecture.png)
+
+
+
+<h1 style="text-align: center;">MAPE-K LOOP IMPLEMENTATION</h1>
+
+![Logo GitHub](https://github.com/sicchio99/SE4AS/blob/main/Mape-KLoop.png)
+
+Our system is based on the Mape-K Loop, using a container system to ensure clear separation between each element of the loop. Components are deployed on separate containers, which are managed through the use of Docker, and which communicate through the use of a Message Broker and Knowledge. The components that describe the data flow are:
+
+- **MONITOR:** Component responsible for collecting data obtained from sensors (CO2, CO, humidity, and fine dust) and writing these values into the knowledge.
+
+- **KNOWLEDGE:** Component responsible for storing collected data realtive to the measured parameters, alarm status (general and specific for each parameter), and safety limits for each parameter.
+
+- **ANALYZER:** Component whose role is to retrieve parameter data from Knowledge, predict a trend by exploiting the past values, and compare the predictions with the threshold limits (also retrieved from Knowledge). Then the determined symptoms are communicated to the Planner through specific messages (one for each symptom) using the MQTT Message Broker.
+
+- **PLANNER:** Component responsible for formulating adaptation strategies, making decisions and implementing policies necessary to bring the value of parameters back within safe thresholds. The strategy is defined based on the symptoms calculated by the Analyzer and published in the relevant topic. Through the MQTT broker, this component, retrieves the symptoms and then publishes the defined adaptation plans.
+
+- **EXECUTOR:** This component based on what is decided and planned works to execute the plan through the use of actuators. Through the use of the MQTT broker, actuators are activated or deactivated.
+
+
+<h1 style="text-align: center;">INTSTRUCTIONS</h1>
+
+Prerequisites: having Docker installed.
+Run on your prompt the command: **git clone https://github.com/sicchio99/SE4AS.git**
+- Enter the directory cmd and run the command: **docker compose build**
+- Execute the command: **docker compose up**
+In order to view dashboards on Grafana:
+- Open Grafana through the link:  **http://localhost:3000**
+- Log in by entering as username and password: **admin**.
+- Go to the Dashboards section and select the section of interest.
