@@ -30,16 +30,11 @@ if __name__ == '__main__':
     p = (influxdb_client.Point("industry_data").tag("configuration", "configuration")
          .field("value", configuration_data).time(int(time.time()), "s"))
 
-   # time.sleep(2)
+    try:
+        write_api.write(bucket=bucket, org=org, record=p)
+        print("Writing in InfluxDB successfully completed!")
 
-    write = False
-    while not write:
-        try:
-            write_api.write(bucket=bucket, org=org, record=p)
-            print("Writing in InfluxDB successfully completed!")
-            write = True
-
-        except Exception as e:
-            print(f"Error when writing to InfluxDB: {e}")
+    except Exception as e:
+        print(f"Error when writing to InfluxDB: {e}")
 
 
